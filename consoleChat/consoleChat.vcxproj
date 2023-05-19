@@ -155,18 +155,24 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="entities.cpp" />
+    <ClCompile Include="game.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="TCPSocketManager.cpp" />
     <ClCompile Include="UDPClient.cpp" />
     <ClCompile Include="UDPHandler.cpp" />
     <ClCompile Include="UDPServer.cpp" />
+    <ClCompile Include="utils.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="entities.h" />
+    <ClInclude Include="game.h" />
     <ClInclude Include="MessageModes.h" />
     <ClInclude Include="TCPSocketManager.h" />
     <ClInclude Include="UDPClient.h" />
     <ClInclude Include="UDPHandler.h" />
     <ClInclude Include="UDPServer.h" />
+    <ClInclude Include="utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

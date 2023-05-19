@@ -6,6 +6,7 @@
 #include "TCPSocketManager.h"
 #include "UDPServer.h"
 #include "UDPClient.h"
+#include "game.h"
 
 const float PKT_LOSS_PROB = 0.25f;
 const unsigned short PORT = 5000;
@@ -126,6 +127,10 @@ void Client()
 
 	std::thread getLines(GetLineFromCin, &sendMessage);
 	getLines.detach();
+
+	// Open Game
+	Game g;
+	g.run();
 
 	std::cout << "Provide a username:" << std::endl;
 	while (applicationRunning)
