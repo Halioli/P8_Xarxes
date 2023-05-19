@@ -54,7 +54,10 @@ void UDPServer::Receive(sf::Packet& inPacket, sf::IpAddress& remoteIP, int& remo
 
 void UDPServer::ReceiveAcknowledge(int id, sf::Packet& inPacket, sf::IpAddress& remoteIP, unsigned short& remotePort)
 {
+    mtx.lock();
+    critMessages.erase(idsToMessageIDs[id]);
     idsToMessageIDs.erase(id);
+    mtx.unlock();
 
     int _ack;
     inPacket >> _ack;

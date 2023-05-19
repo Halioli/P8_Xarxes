@@ -73,7 +73,7 @@ void WaitForACK(UDPHandler* handler)
 {
 	while (applicationRunning && handler->idsToMessageIDs.size() > 0)
 	{
-		handler->WaitForACK(handler->GetLastMessageSent());
+		handler->WaitForACK();
 	}
 }
 
@@ -128,9 +128,9 @@ void Client()
 	std::thread getLines(GetLineFromCin, &sendMessage);
 	getLines.detach();
 
-	// Open Game
-	Game g;
-	g.run();
+	// Open Game <-- logic commented to avoid stalling
+	//Game g;
+	//g.run();
 
 	std::cout << "Provide a username:" << std::endl;
 	while (applicationRunning)

@@ -4,6 +4,7 @@
 #include <string>
 #include <chrono>
 #include <list>
+#include <mutex>
 
 #include "MessageModes.h"
 
@@ -20,6 +21,7 @@ protected:
     };
 
 	int lastMessageSentID = 0;
+    std::mutex mtx;
 
 public:
 	void Send(sf::UdpSocket* socket, sf::Packet packet, sf::IpAddress IP, int port);
@@ -33,6 +35,6 @@ public:
 
     void SendAcknowledge(sf::UdpSocket* socket, int ackMssgType, int _id, sf::IpAddress& remoteIP, unsigned short& remotePort);
     void CriticalMessageSent(int mssgID, sf::Packet packet, sf::UdpSocket* socket, sf::IpAddress IP, int port);
-    void WaitForACK(int mssgID);
+    void WaitForACK();
 };
 
