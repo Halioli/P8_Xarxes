@@ -1,0 +1,151 @@
+#include "UDPServer.h"
+
+void UDPServer::BindSocket()
+{
+    if (socket.bind(PORT) != sf::Socket::Done)
+    {
+        std::cout << "Error binding socket" << std::endl;
+    }
+}
+
+void UDPServer::Receive(sf::Packet& inPacket, sf::IpAddress& remoteIP, int& remotePort)
+{
+    unsigned short shortPort = remotePort;
+    int _id;
+    int _mssgMode;
+
+    if (socket.receive(inPacket, remoteIP, shortPort) != sf::Socket::Done)
+    {
+        std::cout << "Error receiving packet from: " << remoteIP << " on port " << shortPort << std::endl;
+    }
+    else
+    {
+        std::cout << "Received packet from " << remoteIP << " on port " << remotePort << std::endl;
+
+        inPacket >> _id >> _mssgMode;
+
+        if (_mssgMode != MessageModes::LOGIN && (clients.find(_id) == clients.end() && newConnections.find(_id) == newConnections.end()))
+            return;
+
+        switch (_mssgMode)
+        {
+        case LOGIN:
+            ReceiveLogin(inPacket, remoteIP, shortPort);
+            break;
+
+        case CHALLENGE:
+            ReceiveChallengeResponse(_id, inPacket, remoteIP, shortPort);
+            break;
+
+        case MESSAGE:
+            break;
+
+        case ACK:
+            ReceiveAcknowledge(_id, inPacket, remoteIP, shortPort);
+            break;
+
+        case DISCONNECT:
+            break;
+        default:
+            break;
+        }
+    }
+}
+
+void UDPServer::ReceiveAcknowledge(int id, sf::Packet& inPacket, sf::IpAddress& remoteIP, unsigned short& remotePort)
+{
+    idsToMessageIDs.erase(id);
+
+    int _ack;
+    inPacket >> _ack;
+
+    switch (_ack)
+    {
+    case LOGIN:
+        std::cout << "LOGIN ACK" << std::endl;
+        break;
+    case CHALLENGE:
+        std::cout << "CHALLENGE ACK" << std::endl;
+        break;
+    case CHALLENGE_RESULT:
+        std::cout << "CHALLENGE_RESULT ACK" << std::endl;
+        break;
+    case DISCONNECT:
+        break;
+    default:
+        break;
+    }
+}
+
+void UDPServer::ReceiveLogin(sf::Packet& inPacket, sf::IpAddress& remoteIP, unsigned short& remotePort)
+{
+    ++idValues;
+    SendAcknowledge(&socket, MessageModes::LOGIN, idValues, remoteIP, remotePort);
+
+    std::string username;
+    int _port;
+    inPacket >> _port >> username;
+
+    // Create challenge
+    std::string challenge = "Name this animal:\n^..^       /\n/_/ \\_____/\n    /\\  / \\\n   /  \\/   \\";
+    //     ^..^       /
+    //     /_/ \_____/
+    //         /\  / \
+    //        /  \/   \ 
+
+    // Create and save new connection
+    NewConnection newConn;
+    newConn.ip = remoteIP;
+    newConn.port = _port;
+    newConn.name = username;
+    newConn.challenge = challenge;
+    newConn.solution = "Dog";
+
+    newConnections[idValues] = newConn;
+    
+    // Packet and send challenge
+    sf::Packet outPacket;
+    outPacket << idValues << MessageModes::CHALLENGE << challenge;
+    Send(&socket, outPacket, remoteIP, remotePort);
+    CriticalMessageSent(++lastMessageSentID, outPacket, &socket, remoteIP, remotePort);
+}
+
+void UDPServer::ReceiveChallengeResponse(int id, sf::Packet& inPacket, sf::IpAddress& remoteIP, unsigned short& remotePort)
+{
+    SendAcknowledge(&socket, MessageModes::CHALLENGE_RESULT, id, remoteIP, remotePort);
+
+    std::string response;
+    sf::Packet outPacket;
+
+    inPacket >> response;
+
+    if (response == newConnections[id].solution)
+    {
+        outPacket << id << MessageModes::CHALLENGE_RESULT << true;
+        
+        Client newClient;
+        newClient.clientID = id;
+        newClient.ip = remoteIP;
+        newClient.port = remotePort;
+        newClient.name = newConnections[id].name;
+
+        newConnections.erase(id);
+    }
+    else
+    {
+        outPacket << id << MessageModes::CHALLENGE_RESULT << false;
+
+        newConnections.erase(id);
+    }
+
+    Send(&socket, outPacket, remoteIP, remotePort);
+    CriticalMessageSent(++lastMessageSentID, outPacket, &socket, remoteIP, remotePort);
+}
+
+void UDPServer::ReceiveMessage(int id, sf::Packet& inPacket, sf::IpAddress& remoteIP, unsigned short& remotePort)
+{
+    std::string mssg;
+    inPacket >> mssg;
+
+    std::cout << clients[id].name << ": " << mssg << std::endl;
+}
