@@ -155,6 +155,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ClientsGame.cpp" />
     <ClCompile Include="entities.cpp" />
     <ClCompile Include="game.cpp" />
     <ClCompile Include="main.cpp" />
@@ -165,6 +166,7 @@
     <ClCompile Include="utils.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ClientsGame.h" />
     <ClInclude Include="entities.h" />
     <ClInclude Include="game.h" />
     <ClInclude Include="MessageModes.h" />

@@ -22,7 +22,7 @@ bool UDPClient::SendMessage(std::string* message)
 	{
 		sf::Packet mssgPacket;
 		mssgPacket << ID << MessageModes::MESSAGE << &message;
-		Send(&socket, mssgPacket, serverIP, serverPort);
+		Send(&socket, mssgPacket, serverIP, shortServerPort);
 
 		message->clear();
 	}
@@ -35,8 +35,8 @@ void UDPClient::SendLogin(std::string* name)
 	sf::Packet packet;
 	packet << ID << MessageModes::LOGIN << port << *name;
 
-	Send(&socket, packet, serverIP, serverPort);
-	CriticalMessageSent(++lastMessageSentID, packet, &socket, serverIP, port);
+	Send(&socket, packet, serverIP, shortServerPort);
+	CriticalMessageSent(++lastMessageSentID, packet, &socket, serverIP, shortServerPort);
 
 	name->clear();
 }
@@ -46,8 +46,8 @@ void UDPClient::SendChallengeResponse(std::string* response)
 	sf::Packet packet;
 	packet << ID << MessageModes::CHALLENGE << *response;
 
-	Send(&socket, packet, serverIP, serverPort);
-	CriticalMessageSent(++lastMessageSentID, packet, &socket, serverIP, port);
+	Send(&socket, packet, serverIP, shortServerPort);
+	CriticalMessageSent(++lastMessageSentID, packet, &socket, serverIP, shortServerPort);
 
 	response->clear();
 }
@@ -130,7 +130,10 @@ void UDPClient::ReceiveChallengeResult(sf::Packet& packet, sf::IpAddress& remote
 
 void UDPClient::ReceiveAcknowledge(sf::Packet& packet, sf::IpAddress& remoteIP, int& remotePort)
 {
-	idsToMessageIDs.clear();
+	mtx.lock();
+	critMessages.erase(idsToMessageIDs[ID]);
+	idsToMessageIDs.erase(ID);
+	mtx.unlock();
 
 	int ack;
 	packet >> ack;

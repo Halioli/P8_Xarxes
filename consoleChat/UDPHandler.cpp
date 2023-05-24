@@ -1,6 +1,6 @@
 #include "UDPHandler.h"
 
-void UDPHandler::Send(sf::UdpSocket* socket, sf::Packet packet, sf::IpAddress IP, int port)
+void UDPHandler::Send(sf::UdpSocket* socket, sf::Packet packet, sf::IpAddress IP, unsigned short& port)
 {
     if (socket->send(packet, IP, port) != sf::Socket::Done)
     {
@@ -29,7 +29,7 @@ void UDPHandler::CriticalMessageSent(int mssgID, sf::Packet packet, sf::UdpSocke
     mtx.unlock();
 }
 
-void UDPHandler::SendAcknowledge(sf::UdpSocket* socket, int ackMssgType, int _id, sf::IpAddress& remoteIP, unsigned short& remotePort)
+void UDPHandler::SendAcknowledge(sf::UdpSocket* socket, int ackMssgType, int _id, sf::IpAddress remoteIP, unsigned short& remotePort)
 {
     sf::Packet packet;
     packet << _id << MessageModes::ACK << ackMssgType;
@@ -43,13 +43,14 @@ void UDPHandler::WaitForACK()
     for each (std::pair<int, CriticalMessage> critMssg in critMessages)
     {
         // if one second passed
-        if (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - critMssg.second.timestamp).count() >= 1)
+        if (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - critMssg.second.timestamp).count() >= 0.5f)
         {
             // resend mssg
             std::cout << "Resend Packet" << std::endl;
             critMssg.second.timestamp = std::chrono::system_clock::now();
 
-            Send(critMssg.second.socket, critMssg.second.mssgPacket, critMssg.second.IP, critMssg.second.port);
+            unsigned short _port = critMssg.second.port;
+            Send(critMssg.second.socket, critMssg.second.mssgPacket, critMssg.second.IP, _port);
         }
     }
     mtx.unlock();

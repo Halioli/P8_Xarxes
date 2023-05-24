@@ -17,6 +17,7 @@ private:
 
 public:
 	int serverPort;
+	unsigned short shortServerPort = 5000;
 	sf::IpAddress serverIP;
 	MessageModes inputMode = MessageModes::LOGIN;
 

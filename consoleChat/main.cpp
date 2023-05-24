@@ -71,10 +71,18 @@ void OpenListener(UDPServer* _udpServer)
 
 void WaitForACK(UDPHandler* handler)
 {
+	handler->isACKThreadOpen = true;
 	while (applicationRunning && handler->idsToMessageIDs.size() > 0)
 	{
 		handler->WaitForACK();
 	}
+	handler->isACKThreadOpen = false;
+}
+
+void OpenGame(UDPClient* udpClient)
+{
+	Game game;
+	game.Run(udpClient);
 }
 
 void Server()
@@ -97,7 +105,7 @@ void Server()
 
 	while (applicationRunning)
 	{
-		if (udpServer.openACKThread)
+		if (udpServer.openACKThread && !udpServer.isACKThreadOpen)
 		{
 			udpServer.openACKThread = false;
 			std::thread serverWaitForACK(WaitForACK, &udpServer);
@@ -119,7 +127,7 @@ void Client()
 
 	// Set server values
 	udpClient.serverIP = IP;
-	udpClient.serverPort = PORT;
+	udpClient.shortServerPort = PORT;
 
 	// Logic for receiving
 	std::thread udpSocketReceive(OpenReceiveThread, &udpClient);
@@ -128,11 +136,10 @@ void Client()
 	std::thread getLines(GetLineFromCin, &sendMessage);
 	getLines.detach();
 
-	// Open Game <-- logic commented to avoid stalling
-	//Game g;
-	//g.run();
+	// Open Game
+	std::thread openGame(OpenGame, &udpClient);
+	openGame.detach();
 
-	std::cout << "Provide a username:" << std::endl;
 	while (applicationRunning)
 	{
 		if (sendMessage.size() > 0)
@@ -159,7 +166,7 @@ void Client()
 			}
 		}
 
-		if (udpClient.openACKThread)
+		if (udpClient.openACKThread && !udpClient.isACKThreadOpen)
 		{
 			udpClient.openACKThread = false;
 			std::thread clientWaitForACK(WaitForACK, &udpClient);

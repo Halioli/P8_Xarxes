@@ -8,7 +8,7 @@ void UDPServer::BindSocket()
     }
 }
 
-void UDPServer::Receive(sf::Packet& inPacket, sf::IpAddress& remoteIP, int& remotePort)
+void UDPServer::Receive(sf::Packet& inPacket, sf::IpAddress remoteIP, int& remotePort)
 {
     unsigned short shortPort = remotePort;
     int _id;
@@ -52,7 +52,7 @@ void UDPServer::Receive(sf::Packet& inPacket, sf::IpAddress& remoteIP, int& remo
     }
 }
 
-void UDPServer::ReceiveAcknowledge(int id, sf::Packet& inPacket, sf::IpAddress& remoteIP, unsigned short& remotePort)
+void UDPServer::ReceiveAcknowledge(int id, sf::Packet& inPacket, sf::IpAddress remoteIP, unsigned short& remotePort)
 {
     mtx.lock();
     critMessages.erase(idsToMessageIDs[id]);
@@ -80,7 +80,7 @@ void UDPServer::ReceiveAcknowledge(int id, sf::Packet& inPacket, sf::IpAddress& 
     }
 }
 
-void UDPServer::ReceiveLogin(sf::Packet& inPacket, sf::IpAddress& remoteIP, unsigned short& remotePort)
+void UDPServer::ReceiveLogin(sf::Packet& inPacket, sf::IpAddress remoteIP, unsigned short& remotePort)
 {
     ++idValues;
     SendAcknowledge(&socket, MessageModes::LOGIN, idValues, remoteIP, remotePort);
@@ -113,18 +113,19 @@ void UDPServer::ReceiveLogin(sf::Packet& inPacket, sf::IpAddress& remoteIP, unsi
     CriticalMessageSent(++lastMessageSentID, outPacket, &socket, remoteIP, remotePort);
 }
 
-void UDPServer::ReceiveChallengeResponse(int id, sf::Packet& inPacket, sf::IpAddress& remoteIP, unsigned short& remotePort)
+void UDPServer::ReceiveChallengeResponse(int id, sf::Packet& inPacket, sf::IpAddress remoteIP, unsigned short& remotePort)
 {
     SendAcknowledge(&socket, MessageModes::CHALLENGE_RESULT, id, remoteIP, remotePort);
 
     std::string response;
     sf::Packet outPacket;
+    outPacket << id << MessageModes::CHALLENGE_RESULT;
 
     inPacket >> response;
 
     if (response == newConnections[id].solution)
     {
-        outPacket << id << MessageModes::CHALLENGE_RESULT << true;
+        outPacket << true;
         
         Client newClient;
         newClient.clientID = id;
@@ -132,11 +133,12 @@ void UDPServer::ReceiveChallengeResponse(int id, sf::Packet& inPacket, sf::IpAdd
         newClient.port = remotePort;
         newClient.name = newConnections[id].name;
 
+        clients[id] = newClient;
         newConnections.erase(id);
     }
     else
     {
-        outPacket << id << MessageModes::CHALLENGE_RESULT << false;
+        outPacket << false;
 
         newConnections.erase(id);
     }
@@ -145,7 +147,7 @@ void UDPServer::ReceiveChallengeResponse(int id, sf::Packet& inPacket, sf::IpAdd
     CriticalMessageSent(++lastMessageSentID, outPacket, &socket, remoteIP, remotePort);
 }
 
-void UDPServer::ReceiveMessage(int id, sf::Packet& inPacket, sf::IpAddress& remoteIP, unsigned short& remotePort)
+void UDPServer::ReceiveMessage(int id, sf::Packet& inPacket, sf::IpAddress remoteIP, unsigned short& remotePort)
 {
     std::string mssg;
     inPacket >> mssg;

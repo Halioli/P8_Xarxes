@@ -38,10 +38,10 @@ public:
 	std::map<int, NewConnection> newConnections;
 
 	void BindSocket();
-	void Receive(sf::Packet & inPacket, sf::IpAddress &remoteIP, int &remotePort);
-	void ReceiveAcknowledge(int id, sf::Packet& inPacket, sf::IpAddress& remoteIP, unsigned short& remotePort);
-	void ReceiveLogin(sf::Packet& inPacket, sf::IpAddress& remoteIP, unsigned short& remotePort);
-	void ReceiveChallengeResponse(int id, sf::Packet& inPacket, sf::IpAddress& remoteIP, unsigned short& remotePort);
-	void ReceiveMessage(int id, sf::Packet& inPacket, sf::IpAddress& remoteIP, unsigned short& remotePort);
+	void Receive(sf::Packet & inPacket, sf::IpAddress remoteIP, int &remotePort);
+	void ReceiveAcknowledge(int id, sf::Packet& inPacket, sf::IpAddress remoteIP, unsigned short& remotePort);
+	void ReceiveLogin(sf::Packet& inPacket, sf::IpAddress remoteIP, unsigned short& remotePort);
+	void ReceiveChallengeResponse(int id, sf::Packet& inPacket, sf::IpAddress remoteIP, unsigned short& remotePort);
+	void ReceiveMessage(int id, sf::Packet& inPacket, sf::IpAddress remoteIP, unsigned short& remotePort);
 };
 

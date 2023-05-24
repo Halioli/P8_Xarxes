@@ -1,10 +1,13 @@
 #pragma once
-#include "entities.h"
-#include "utils.h"
 #include <thread>
 #include <chrono>
 #include <SFML/Graphics.hpp>
 #include <SFML/System/Vector2.hpp>
+#include "entities.h"
+#include "utils.h"
+#include "UDPHandler.h"
+#include "UDPClient.h"
+#include "UDPServer.h"
 #define SIZE 10.f
 
 class Game
@@ -32,7 +35,7 @@ class Game
 	std::vector<Bullet> bullets2; // Bullet container to manage them
 
 public:
-	void setUp();      // Initializing GUI
-	void run();        // Application loop
-	void updateGame(); // No implemented => Implement it in the Server side
+	void SetUp();      // Initializing GUI
+	void Run(UDPClient* udpClient); // Application loop
+	void UpdateGame(); // No implemented => Implement it in the Server side
 };
