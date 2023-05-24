@@ -38,4 +38,7 @@ public:
 	void SetUp();      // Initializing GUI
 	void Run(UDPClient* udpClient); // Application loop
 	void UpdateGame(); // No implemented => Implement it in the Server side
+
+	void SetMessage(std::string mssg);
+	std::string GetNameText();
 };

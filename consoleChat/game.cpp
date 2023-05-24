@@ -157,3 +157,13 @@ void Game::Run(UDPClient* udpClient)
 		window.display();
 	}
 }
+
+void Game::SetMessage(std::string mssg)
+{
+	message = mssg;
+}
+
+std::string Game::GetNameText()
+{
+	return nameText.getString();
+}

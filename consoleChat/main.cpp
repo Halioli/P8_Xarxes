@@ -7,6 +7,7 @@
 #include "UDPServer.h"
 #include "UDPClient.h"
 #include "game.h"
+#include "ClientsGame.h"
 
 const float PKT_LOSS_PROB = 0.25f;
 const unsigned short PORT = 5000;
@@ -82,6 +83,10 @@ void WaitForACK(UDPHandler* handler)
 void OpenGame(UDPClient* udpClient)
 {
 	Game game;
+
+	udpClient->myClientGame->client = udpClient;
+	udpClient->myClientGame->game = &game;
+
 	game.Run(udpClient);
 }
 
@@ -128,6 +133,7 @@ void Client()
 	// Set server values
 	udpClient.serverIP = IP;
 	udpClient.shortServerPort = PORT;
+	udpClient.myClientGame = new ClientsGame;
 
 	// Logic for receiving
 	std::thread udpSocketReceive(OpenReceiveThread, &udpClient);

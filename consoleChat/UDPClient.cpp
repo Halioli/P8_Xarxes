@@ -1,4 +1,5 @@
 #include "UDPClient.h"
+#include "ClientsGame.h"
 
 void UDPClient::BindSocket()
 {
@@ -104,6 +105,8 @@ void UDPClient::ReceiveChallenge(sf::Packet& packet, sf::IpAddress& remoteIP, in
 
 	std::string challenge;
 	packet >> challenge;
+
+	myClientGame->UpdateShownMessage(challenge);
 
 	std::cout << challenge << std::endl;
 	inputMode = MessageModes::CHALLENGE;

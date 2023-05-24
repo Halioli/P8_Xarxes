@@ -4,5 +4,11 @@
 
 class ClientsGame
 {
+public:
+	UDPClient* client;
+	Game* game;
+
+	void SendUsername();
+	void UpdateShownMessage(std::string message);
 };
 

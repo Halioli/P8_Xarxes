@@ -5,6 +5,7 @@
 #include <chrono>
 #include "MessageModes.h"
 #include "UDPHandler.h"
+class ClientsGame;
 
 class UDPClient : public UDPHandler
 {
@@ -20,6 +21,7 @@ public:
 	unsigned short shortServerPort = 5000;
 	sf::IpAddress serverIP;
 	MessageModes inputMode = MessageModes::LOGIN;
+	ClientsGame* myClientGame;
 
 	void BindSocket();
 	bool SendMessage(std::string* message);
