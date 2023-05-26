@@ -1,4 +1,5 @@
 #include "game.h"
+#include "ClientsGame.h"
 
 void Game::SetUp()
 {
@@ -32,7 +33,7 @@ void Game::SetUp()
 	nameRectangle.setPosition(200, 130);
 }
 
-void Game::Run(UDPClient* udpClient)
+void Game::Run()
 {
 	SetUp(); // Setting Up the GUI
 	
@@ -104,7 +105,8 @@ void Game::Run(UDPClient* udpClient)
 					}
 					else if (event.key.code == sf::Keyboard::Return && input.getSize() > 0) 
 					{ 
-						playing = true; 
+						clientGame->EnterKeyPressed(&input);
+						//playing = true; 
 					}
 					else 
 					{ 
@@ -160,7 +162,13 @@ void Game::Run(UDPClient* udpClient)
 
 void Game::SetMessage(std::string mssg)
 {
+	message.clear();
 	message = mssg;
+
+	text = sf::Text(message, font, 18);
+	text.setFillColor(sf::Color(255, 255, 255));
+	text.setStyle(sf::Text::Bold);
+	text.setPosition(200, 100);
 }
 
 std::string Game::GetNameText()

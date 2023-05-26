@@ -163,3 +163,8 @@ bool UDPClient::GetForceQuit()
 {
 	return forceQuit;
 }
+
+void UDPClient::SetForceQuit(bool _forceQuit)
+{
+	forceQuit = _forceQuit;
+}

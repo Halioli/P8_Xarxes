@@ -83,11 +83,15 @@ void WaitForACK(UDPHandler* handler)
 void OpenGame(UDPClient* udpClient)
 {
 	Game game;
+	game.clientGame = new ClientsGame;
+
+	game.clientGame->client = udpClient;
+	game.clientGame->game = &game;
 
 	udpClient->myClientGame->client = udpClient;
 	udpClient->myClientGame->game = &game;
 
-	game.Run(udpClient);
+	game.Run();
 }
 
 void Server()
@@ -148,30 +152,6 @@ void Client()
 
 	while (applicationRunning)
 	{
-		if (sendMessage.size() > 0)
-		{
-			switch (udpClient.inputMode)
-			{
-			case LOGIN:
-				udpClient.SendLogin(&sendMessage);
-				break;
-			case CHALLENGE:
-				udpClient.SendChallengeResponse(&sendMessage);
-				break;
-			case MESSAGE:
-				if (!udpClient.SendMessage(&sendMessage))
-				{
-					applicationRunning = false;
-				}
-				break;
-			case DISCONNECT:
-				applicationRunning = false;
-				break;
-			default:
-				break;
-			}
-		}
-
 		if (udpClient.openACKThread && !udpClient.isACKThreadOpen)
 		{
 			udpClient.openACKThread = false;

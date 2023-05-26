@@ -8,6 +8,8 @@
 #include "UDPHandler.h"
 #include "UDPClient.h"
 #include "UDPServer.h"
+class ClientsGame;
+
 #define SIZE 10.f
 
 class Game
@@ -35,8 +37,10 @@ class Game
 	std::vector<Bullet> bullets2; // Bullet container to manage them
 
 public:
+	ClientsGame* clientGame;
+
 	void SetUp();      // Initializing GUI
-	void Run(UDPClient* udpClient); // Application loop
+	void Run(); // Application loop
 	void UpdateGame(); // No implemented => Implement it in the Server side
 
 	void SetMessage(std::string mssg);

@@ -90,7 +90,7 @@ void UDPServer::ReceiveLogin(sf::Packet& inPacket, sf::IpAddress remoteIP, unsig
     inPacket >> _port >> username;
 
     // Create challenge
-    std::string challenge = "Name this animal:\n^..^       /\n/_/ \\_____/\n    /\\  / \\\n   /  \\/   \\";
+    std::string challenge = "Name this animal:\n\n\n\n^..^       /\n/_/ \\_____/\n    /\\  / \\\n   /  \\/   \\";
     //     ^..^       /
     //     /_/ \_____/
     //         /\  / \
@@ -102,7 +102,7 @@ void UDPServer::ReceiveLogin(sf::Packet& inPacket, sf::IpAddress remoteIP, unsig
     newConn.port = _port;
     newConn.name = username;
     newConn.challenge = challenge;
-    newConn.solution = "Dog";
+    newConn.solution = "dog";
 
     newConnections[idValues] = newConn;
     
@@ -123,7 +123,13 @@ void UDPServer::ReceiveChallengeResponse(int id, sf::Packet& inPacket, sf::IpAdd
 
     inPacket >> response;
 
-    if (response == newConnections[id].solution)
+    std::string lowercaseMssg;
+    for (int i = 0; i < response.length(); i++)
+    {
+        lowercaseMssg.append(1, std::tolower(response[i]));
+    }
+
+    if (lowercaseMssg == newConnections[id].solution)
     {
         outPacket << true;
         

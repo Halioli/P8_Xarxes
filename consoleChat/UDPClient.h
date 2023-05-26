@@ -33,5 +33,6 @@ public:
 	void ReceiveAcknowledge(sf::Packet& packet, sf::IpAddress& remoteIP, int& remotePort);
 
 	bool GetForceQuit();
+	void SetForceQuit(bool _forceQuit);
 };
 

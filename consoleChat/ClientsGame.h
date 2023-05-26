@@ -10,5 +10,6 @@ public:
 
 	void SendUsername();
 	void UpdateShownMessage(std::string message);
+	void EnterKeyPressed(sf::String* message);
 };
 
