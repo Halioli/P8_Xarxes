@@ -44,6 +44,14 @@ void UDPServer::Receive(sf::Packet& inPacket, sf::IpAddress remoteIP, int& remot
             ReceiveAcknowledge(_id, inPacket, remoteIP, shortPort);
             break;
 
+        case JOIN_GAME:
+            ReceiveJoinGame(_id, inPacket, remoteIP, shortPort);
+            break;
+
+        case CREATE_GAME:
+            ReceiveCreateGame(_id, inPacket, remoteIP, shortPort);
+            break;
+
         case DISCONNECT:
             break;
         default:
@@ -54,6 +62,8 @@ void UDPServer::Receive(sf::Packet& inPacket, sf::IpAddress remoteIP, int& remot
 
 void UDPServer::ReceiveAcknowledge(int id, sf::Packet& inPacket, sf::IpAddress remoteIP, unsigned short& remotePort)
 {
+    lastACKTimestamps.push(std::chrono::system_clock::now());
+
     mtx.lock();
     critMessages.erase(idsToMessageIDs[id]);
     idsToMessageIDs.erase(id);
@@ -73,6 +83,9 @@ void UDPServer::ReceiveAcknowledge(int id, sf::Packet& inPacket, sf::IpAddress r
     case CHALLENGE_RESULT:
         std::cout << "CHALLENGE_RESULT ACK" << std::endl;
         break;
+    case ENTER_GAME:
+        std::cout << "ENTER_GAME ACK" << std::endl;
+        break;
     case DISCONNECT:
         break;
     default:
@@ -89,26 +102,22 @@ void UDPServer::ReceiveLogin(sf::Packet& inPacket, sf::IpAddress remoteIP, unsig
     int _port;
     inPacket >> _port >> username;
 
-    // Create challenge
-    std::string challenge = "Name this animal:\n\n\n\n^..^       /\n/_/ \\_____/\n    /\\  / \\\n   /  \\/   \\";
-    //     ^..^       /
-    //     /_/ \_____/
-    //         /\  / \
-    //        /  \/   \ 
+    // Get random challenge
+    int challengeIndex = 0;
 
     // Create and save new connection
     NewConnection newConn;
     newConn.ip = remoteIP;
     newConn.port = _port;
     newConn.name = username;
-    newConn.challenge = challenge;
-    newConn.solution = "dog";
+    newConn.challenge = challenges[challengeIndex];
+    newConn.solution = solutions[challengeIndex];
 
     newConnections[idValues] = newConn;
     
     // Packet and send challenge
     sf::Packet outPacket;
-    outPacket << idValues << MessageModes::CHALLENGE << challenge;
+    outPacket << idValues << MessageModes::CHALLENGE << newConn.challenge;
     Send(&socket, outPacket, remoteIP, remotePort);
     CriticalMessageSent(++lastMessageSentID, outPacket, &socket, remoteIP, remotePort);
 }
@@ -159,4 +168,32 @@ void UDPServer::ReceiveMessage(int id, sf::Packet& inPacket, sf::IpAddress remot
     inPacket >> mssg;
 
     std::cout << clients[id].name << ": " << mssg << std::endl;
+}
+
+void UDPServer::ReceiveJoinGame(int id, sf::Packet& inPacket, sf::IpAddress remoteIP, unsigned short& remotePort)
+{
+    SendAcknowledge(&socket, MessageModes::JOIN_GAME, id, remoteIP, remotePort);
+
+    sf::Packet outPacket;
+    outPacket << id << MessageModes::ENTER_GAME;
+
+    // Join/Create game
+
+    // Send crit mssg to client
+    Send(&socket, outPacket, remoteIP, remotePort);
+    CriticalMessageSent(++lastMessageSentID, outPacket, &socket, remoteIP, remotePort);
+}
+
+void UDPServer::ReceiveCreateGame(int id, sf::Packet& inPacket, sf::IpAddress remoteIP, unsigned short& remotePort)
+{
+    SendAcknowledge(&socket, MessageModes::CREATE_GAME, id, remoteIP, remotePort);
+
+    sf::Packet outPacket;
+    outPacket << id << MessageModes::ENTER_GAME;
+
+    // Create game
+
+    // Send crit mssg to client
+    Send(&socket, outPacket, remoteIP, remotePort);
+    CriticalMessageSent(++lastMessageSentID, outPacket, &socket, remoteIP, remotePort);
 }

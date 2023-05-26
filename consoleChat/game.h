@@ -45,4 +45,7 @@ public:
 
 	void SetMessage(std::string mssg);
 	std::string GetNameText();
+
+	void SetPlaying(bool _playing);
+	bool GetPlaying();
 };

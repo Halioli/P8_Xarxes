@@ -8,8 +8,10 @@ public:
 	UDPClient* client;
 	Game* game;
 
-	void SendUsername();
 	void UpdateShownMessage(std::string message);
 	void EnterKeyPressed(sf::String* message);
+	void ShowGamesMenu();
+
+	void SetIsPlaying(bool isPlaying);
 };
 

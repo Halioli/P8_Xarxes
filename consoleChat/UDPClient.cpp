@@ -53,6 +53,33 @@ void UDPClient::SendChallengeResponse(std::string* response)
 	response->clear();
 }
 
+void UDPClient::SendSelectedGameOption(std::string* gameOption)
+{
+	if (gameOption[0] == "1")
+	{
+		// Join existing game
+		sf::Packet outPacket;
+		outPacket << ID << MessageModes::JOIN_GAME;
+
+		Send(&socket, outPacket, serverIP, shortServerPort);
+		CriticalMessageSent(++lastMessageSentID, outPacket, &socket, serverIP, serverPort);
+	}
+	else if (gameOption[0] == "2")
+	{
+		// Create new game
+		sf::Packet outPacket;
+		outPacket << ID << MessageModes::CREATE_GAME;
+
+		Send(&socket, outPacket, serverIP, shortServerPort);
+		CriticalMessageSent(++lastMessageSentID, outPacket, &socket, serverIP, serverPort);
+	}
+	else
+	{
+		// Clear and ask again
+		myClientGame->UpdateShownMessage("1 - Join Game || 2 - Create Game\n\n\nIncorrect input, please try again u insignificant fuck.\ny'all put bones in ya pizza then?");
+	}
+}
+
 void UDPClient::Receive(sf::Packet& packet, sf::IpAddress& remoteIP, int& remotePort)
 {
     unsigned short shortPort = remotePort;
@@ -87,6 +114,10 @@ void UDPClient::Receive(sf::Packet& packet, sf::IpAddress& remoteIP, int& remote
 
 		case ACK:
 			ReceiveAcknowledge(packet, remoteIP, remotePort);
+			break;
+
+		case ENTER_GAME:
+			ReceiveEnterGame(packet, remoteIP, remotePort);
 			break;
 
 		case DISCONNECT:
@@ -127,7 +158,8 @@ void UDPClient::ReceiveChallengeResult(sf::Packet& packet, sf::IpAddress& remote
 	}
 	else
 	{
-		inputMode = MessageModes::MESSAGE;
+		inputMode = MessageModes::GAME_SELECTION;
+		myClientGame->ShowGamesMenu();
 	}
 }
 
@@ -146,17 +178,33 @@ void UDPClient::ReceiveAcknowledge(sf::Packet& packet, sf::IpAddress& remoteIP, 
 	case LOGIN:
 		std::cout << "LOGIN ACK" << std::endl;
 		break;
+
 	case CHALLENGE:
 		std::cout << "CHALLENGE ACK" << std::endl;
 		break;
+
 	case CHALLENGE_RESULT:
 		std::cout << "CHALLENGE_RESULT ACK" << std::endl;
 		break;
+
+	case JOIN_GAME:
+	case CREATE_GAME:
+		std::cout << "JOIN/CREATE_GAME ACK" << std::endl;
+		break;
+
 	case DISCONNECT:
 		break;
 	default:
 		break;
 	}
+}
+
+void UDPClient::ReceiveEnterGame(sf::Packet& packet, sf::IpAddress& remoteIP, int& remotePort)
+{
+	unsigned short shorPort = remotePort;
+	SendAcknowledge(&socket, MessageModes::ENTER_GAME, ID, remoteIP, shorPort);
+
+	myClientGame->SetIsPlaying(true);
 }
 
 bool UDPClient::GetForceQuit()

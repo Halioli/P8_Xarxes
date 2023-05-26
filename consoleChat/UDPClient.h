@@ -27,10 +27,12 @@ public:
 	bool SendMessage(std::string* message);
 	void SendLogin(std::string* name);
 	void SendChallengeResponse(std::string* response);
+	void SendSelectedGameOption(std::string* gameOption);
 	void Receive(sf::Packet &packet, sf::IpAddress &remoteIP, int &remotePort);
 	void ReceiveChallenge(sf::Packet& packet, sf::IpAddress& remoteIP, int& remotePort);
 	void ReceiveChallengeResult(sf::Packet& packet, sf::IpAddress& remoteIP, int& remotePort);
 	void ReceiveAcknowledge(sf::Packet& packet, sf::IpAddress& remoteIP, int& remotePort);
+	void ReceiveEnterGame(sf::Packet& packet, sf::IpAddress& remoteIP, int& remotePort);
 
 	bool GetForceQuit();
 	void SetForceQuit(bool _forceQuit);

@@ -4,6 +4,7 @@
 #include <string>
 #include <chrono>
 #include <list>
+#include <queue>
 #include "MessageModes.h"
 #include "UDPHandler.h"
 
@@ -33,6 +34,22 @@ private:
 	sf::UdpSocket socket;
 	unsigned int idValues = 0;
 
+	std::queue<std::chrono::system_clock::time_point> lastACKTimestamps;
+
+	std::vector<std::string> challenges =
+	{
+		"Name this animal:\n\n\n\n^..^       /\n/_/ \\_____/\n    /\\  / \\\n   /  \\/   \\",
+		//     ^..^       /
+		//     /_/ \_____/
+		//         /\  / \
+	    //        /  \/   \ 
+
+	};
+	std::vector<std::string> solutions =
+	{
+		"dog"
+	};
+
 public:
 	std::map<int, Client> clients;
 	std::map<int, NewConnection> newConnections;
@@ -43,5 +60,7 @@ public:
 	void ReceiveLogin(sf::Packet& inPacket, sf::IpAddress remoteIP, unsigned short& remotePort);
 	void ReceiveChallengeResponse(int id, sf::Packet& inPacket, sf::IpAddress remoteIP, unsigned short& remotePort);
 	void ReceiveMessage(int id, sf::Packet& inPacket, sf::IpAddress remoteIP, unsigned short& remotePort);
+	void ReceiveJoinGame(int id, sf::Packet& inPacket, sf::IpAddress remoteIP, unsigned short& remotePort);
+	void ReceiveCreateGame(int id, sf::Packet& inPacket, sf::IpAddress remoteIP, unsigned short& remotePort);
 };
 

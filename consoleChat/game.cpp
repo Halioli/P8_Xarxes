@@ -175,3 +175,13 @@ std::string Game::GetNameText()
 {
 	return nameText.getString();
 }
+
+void Game::SetPlaying(bool _playing)
+{
+	playing = _playing;
+}
+
+bool Game::GetPlaying()
+{
+	return playing;
+}

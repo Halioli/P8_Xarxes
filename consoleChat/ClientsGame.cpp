@@ -1,11 +1,5 @@
 #include "ClientsGame.h"
 
-void ClientsGame::SendUsername()
-{
-	std::string username = game->GetNameText();
-	client->SendLogin(&username);
-}
-
 void ClientsGame::UpdateShownMessage(std::string message)
 {
 	game->SetMessage(message);
@@ -29,6 +23,11 @@ void ClientsGame::EnterKeyPressed(sf::String* message)
 				client->SetForceQuit(true);
 			}
 			break;
+
+		case GAME_SELECTION:
+			client->SendSelectedGameOption(&message->toAnsiString());
+			break;
+
 		case DISCONNECT:
 			client->SetForceQuit(true);
 			break;
@@ -37,4 +36,15 @@ void ClientsGame::EnterKeyPressed(sf::String* message)
 		}
 		message->clear();
 	}
+}
+
+void ClientsGame::ShowGamesMenu()
+{
+	std::string newShownMessage = "1 - Join Game || 2 - Create Game";
+	UpdateShownMessage(newShownMessage);
+}
+
+void ClientsGame::SetIsPlaying(bool isPlaying)
+{
+	game->SetPlaying(isPlaying);
 }
