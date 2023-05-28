@@ -3,13 +3,14 @@
 #include <iostream> 
 #include <string>
 #include <thread>
+#include <random>
+#include <Windows.h>
 #include "TCPSocketManager.h"
 #include "UDPServer.h"
 #include "UDPClient.h"
 #include "game.h"
 #include "ClientsGame.h"
 
-const float PKT_LOSS_PROB = 0.25f;
 const unsigned short PORT = 5000;
 const sf::IpAddress IP = "127.0.0.1";
 bool applicationRunning = true;
@@ -80,6 +81,11 @@ void WaitForACK(UDPHandler* handler)
 	handler->isACKThreadOpen = false;
 }
 
+void CallCalculateRTT(UDPServer *server)
+{
+	server->CalculateAverageRTT();
+}
+
 void OpenGame(UDPClient* udpClient)
 {
 	Game game;
@@ -112,13 +118,35 @@ void Server()
 	std::thread getLines(GetLineFromCin, &sendMessage);
 	getLines.detach();
 
-	while (applicationRunning)
+	std::thread calculateRtt(CallCalculateRTT, &udpServer);
+	calculateRtt.detach();
+
+	while (udpServer.GetIsRunning())
 	{
 		if (udpServer.openACKThread && !udpServer.isACKThreadOpen)
 		{
 			udpServer.openACKThread = false;
 			std::thread serverWaitForACK(WaitForACK, &udpServer);
 			serverWaitForACK.detach();
+		}
+
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num1))
+		{
+			if (udpServer.packetLostProbablity >= 100)
+				udpServer.packetLostProbablity = 100;
+			else
+				udpServer.packetLostProbablity += 0.01f;
+
+			std::cout << "Packet loss probability: " << (int)udpServer.packetLostProbablity << std::endl;
+		}
+		else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num2))
+		{
+			if (udpServer.packetLostProbablity > 0)
+				udpServer.packetLostProbablity -= 0.01f;
+			else
+				udpServer.packetLostProbablity = 0;
+
+			std::cout << "Packet loss probability: " << (int)udpServer.packetLostProbablity << std::endl;
 		}
 	}
 }
@@ -158,7 +186,26 @@ void Client()
 			std::thread clientWaitForACK(WaitForACK, &udpClient);
 			clientWaitForACK.detach();
 		}
-		
+
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num1))
+		{
+			if (udpClient.packetLostProbablity >= 100)
+				udpClient.packetLostProbablity = 100;
+			else
+				udpClient.packetLostProbablity += 0.01f;
+
+			std::cout << "Packet loss probability: " << (int)udpClient.packetLostProbablity << std::endl;
+		}
+		else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num2))
+		{
+			if (udpClient.packetLostProbablity > 0)
+				udpClient.packetLostProbablity -= 0.01f;
+			else
+				udpClient.packetLostProbablity = 0;
+
+			std::cout << "Packet loss probability: " << (int)udpClient.packetLostProbablity << std::endl;
+		}
+
 		if (udpClient.GetForceQuit())
 		{
 			applicationRunning = false;
@@ -168,6 +215,8 @@ void Client()
 
 void main()
 {
+	srand(time(NULL));
+
 	int server_mode;
 	std::string mode_str;
 	std::cout << "Select a mode: (1) server, (2) cliente" << std::endl;

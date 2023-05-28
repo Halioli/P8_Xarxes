@@ -5,6 +5,7 @@
 #include <chrono>
 #include <list>
 #include <queue>
+#include <thread>
 #include "MessageModes.h"
 #include "UDPHandler.h"
 
@@ -33,8 +34,9 @@ private:
 
 	sf::UdpSocket socket;
 	unsigned int idValues = 0;
+	bool isRunning = true;
 
-	std::queue<std::chrono::system_clock::time_point> lastACKTimestamps;
+	std::list<float> lastACKsTimeDifference;
 
 	std::vector<std::string> challenges =
 	{
@@ -62,5 +64,8 @@ public:
 	void ReceiveMessage(int id, sf::Packet& inPacket, sf::IpAddress remoteIP, unsigned short& remotePort);
 	void ReceiveJoinGame(int id, sf::Packet& inPacket, sf::IpAddress remoteIP, unsigned short& remotePort);
 	void ReceiveCreateGame(int id, sf::Packet& inPacket, sf::IpAddress remoteIP, unsigned short& remotePort);
+	void CalculateAverageRTT();
+
+	bool GetIsRunning();
 };
 

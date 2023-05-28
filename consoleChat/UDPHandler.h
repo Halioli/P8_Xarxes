@@ -27,6 +27,7 @@ public:
 	void Send(sf::UdpSocket* socket, sf::Packet packet, sf::IpAddress IP, unsigned short& port);
 	int GetLastMessageSent();
 
+    float packetLostProbablity = 0.0f;
     //
     bool openACKThread;
     bool waitForACK;

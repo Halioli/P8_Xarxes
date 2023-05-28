@@ -2,6 +2,13 @@
 
 void UDPHandler::Send(sf::UdpSocket* socket, sf::Packet packet, sf::IpAddress IP, unsigned short& port)
 {
+    // Ceck if message has to be lost
+    if (rand() % 100 <= (int)packetLostProbablity)
+    {
+        return;
+    }
+
+    // Send message
     if (socket->send(packet, IP, port) != sf::Socket::Done)
     {
         std::cout << "Error sending packet to " << IP << std::endl;

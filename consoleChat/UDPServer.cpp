@@ -62,7 +62,10 @@ void UDPServer::Receive(sf::Packet& inPacket, sf::IpAddress remoteIP, int& remot
 
 void UDPServer::ReceiveAcknowledge(int id, sf::Packet& inPacket, sf::IpAddress remoteIP, unsigned short& remotePort)
 {
-    lastACKTimestamps.push(std::chrono::system_clock::now());
+    mtx.lock();
+    float mssgRTT = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - critMessages[idsToMessageIDs[id]].timestamp).count();
+    lastACKsTimeDifference.push_back(mssgRTT);
+    mtx.unlock();
 
     mtx.lock();
     critMessages.erase(idsToMessageIDs[id]);
@@ -191,9 +194,45 @@ void UDPServer::ReceiveCreateGame(int id, sf::Packet& inPacket, sf::IpAddress re
     sf::Packet outPacket;
     outPacket << id << MessageModes::ENTER_GAME;
 
-    // Create game
+    // Create gamem (TODO)
 
     // Send crit mssg to client
     Send(&socket, outPacket, remoteIP, remotePort);
     CriticalMessageSent(++lastMessageSentID, outPacket, &socket, remoteIP, remotePort);
+}
+
+void UDPServer::CalculateAverageRTT()
+{
+    while (isRunning)
+    {
+        float currentValue = 0.f;
+        float result = 0.f;
+
+        std::this_thread::sleep_for(std::chrono::seconds(2));
+
+        mtx.lock();
+        if (lastACKsTimeDifference.size() > 0)
+        {
+            // Clear old times & calculate avrg if needed
+            while (lastACKsTimeDifference.size() > 10)
+            {
+                lastACKsTimeDifference.pop_front();
+            }
+
+            // Calculate avrg
+            for each (float timeDifference in lastACKsTimeDifference)
+            {
+                currentValue += timeDifference;
+            }
+            result = currentValue / lastACKsTimeDifference.size();
+
+            std::cout << "Current RTT: " << result << std::endl;
+        }
+        mtx.unlock();
+    }
+}
+
+bool UDPServer::GetIsRunning()
+{
+    return isRunning;
 }
