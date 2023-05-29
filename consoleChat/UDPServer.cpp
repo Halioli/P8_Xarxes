@@ -30,11 +30,17 @@ void UDPServer::Receive(sf::Packet& inPacket, sf::IpAddress remoteIP, int& remot
         switch (_mssgMode)
         {
         case LOGIN:
-            ReceiveLogin(inPacket, remoteIP, shortPort);
+            if (newConnections[_id].lastMessageMode != MessageModes::CHALLENGE)
+                ReceiveLogin(inPacket, remoteIP, shortPort);
+            else
+                SendAcknowledge(&socket, MessageModes::LOGIN, idValues, remoteIP, shortPort);
             break;
 
         case CHALLENGE:
-            ReceiveChallengeResponse(_id, inPacket, remoteIP, shortPort);
+            if (newConnections[_id].lastMessageMode != MessageModes::CHALLENGE_RESULT || clients[_id].lastMessageMode != MessageModes::CHALLENGE_RESULT)
+                ReceiveChallengeResponse(_id, inPacket, remoteIP, shortPort);
+            else
+                SendAcknowledge(&socket, MessageModes::CHALLENGE_RESULT, idValues, remoteIP, shortPort);
             break;
 
         case MESSAGE:
@@ -63,7 +69,7 @@ void UDPServer::Receive(sf::Packet& inPacket, sf::IpAddress remoteIP, int& remot
 void UDPServer::ReceiveAcknowledge(int id, sf::Packet& inPacket, sf::IpAddress remoteIP, unsigned short& remotePort)
 {
     mtx.lock();
-    float mssgRTT = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - critMessages[idsToMessageIDs[id]].timestamp).count();
+    float mssgRTT = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - critMessages[idsToMessageIDs[id]].initialTimestamp).count();
     lastACKsTimeDifference.push_back(mssgRTT);
     mtx.unlock();
 
@@ -115,6 +121,7 @@ void UDPServer::ReceiveLogin(sf::Packet& inPacket, sf::IpAddress remoteIP, unsig
     newConn.name = username;
     newConn.challenge = challenges[challengeIndex];
     newConn.solution = solutions[challengeIndex];
+    newConn.lastMessageMode = MessageModes::CHALLENGE;
 
     newConnections[idValues] = newConn;
     
@@ -141,6 +148,7 @@ void UDPServer::ReceiveChallengeResponse(int id, sf::Packet& inPacket, sf::IpAdd
         lowercaseMssg.append(1, std::tolower(response[i]));
     }
 
+    newConnections[id].lastMessageMode = MessageModes::CHALLENGE_RESULT;
     if (lowercaseMssg == newConnections[id].solution)
     {
         outPacket << true;
@@ -150,6 +158,7 @@ void UDPServer::ReceiveChallengeResponse(int id, sf::Packet& inPacket, sf::IpAdd
         newClient.ip = remoteIP;
         newClient.port = remotePort;
         newClient.name = newConnections[id].name;
+        newClient.lastMessageMode = MessageModes::CHALLENGE_RESULT;
 
         clients[id] = newClient;
         newConnections.erase(id);
@@ -180,7 +189,7 @@ void UDPServer::ReceiveJoinGame(int id, sf::Packet& inPacket, sf::IpAddress remo
     sf::Packet outPacket;
     outPacket << id << MessageModes::ENTER_GAME;
 
-    // Join/Create game
+    // Join/Create game (TODO)
 
     // Send crit mssg to client
     Send(&socket, outPacket, remoteIP, remotePort);

@@ -3,9 +3,11 @@
 void UDPHandler::Send(sf::UdpSocket* socket, sf::Packet packet, sf::IpAddress IP, unsigned short& port)
 {
     // Ceck if message has to be lost
-    if (rand() % 100 <= (int)packetLostProbablity)
+    int random = 1 + (rand() % 100);
+    if (random < (int)packetLostProbablity)
     {
-        return;
+        std::cout << "PACKET LOST AT " << random << " WITH PROBABILITY OF " << (int)packetLostProbablity << std::endl;
+        //return; // Commented this to have it working even if it should be lost
     }
 
     // Send message
@@ -14,7 +16,6 @@ void UDPHandler::Send(sf::UdpSocket* socket, sf::Packet packet, sf::IpAddress IP
         std::cout << "Error sending packet to " << IP << std::endl;
     }
 }
-
 
 int UDPHandler::GetLastMessageSent()
 {
@@ -32,7 +33,7 @@ void UDPHandler::CriticalMessageSent(int mssgID, sf::Packet packet, sf::UdpSocke
     openACKThread = true;
     mtx.lock();
     idsToMessageIDs[targetID] = mssgID;
-    critMessages[mssgID] = { std::chrono::system_clock::now(), packet, socket, IP, port };
+    critMessages[mssgID] = { std::chrono::system_clock::now(), std::chrono::system_clock::now(), packet, socket, IP, port };
     mtx.unlock();
 }
 
@@ -50,10 +51,10 @@ void UDPHandler::WaitForACK()
     for each (std::pair<int, CriticalMessage> critMssg in critMessages)
     {
         // if one second passed
-        if (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - critMssg.second.timestamp).count() >= 0.5f)
+        if (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - critMssg.second.timestamp).count() >= 2.f)
         {
             // resend mssg
-            std::cout << "Resend Packet" << std::endl;
+            std::cout << "Resend Packet id: " << critMssg.first << std::endl;
             critMssg.second.timestamp = std::chrono::system_clock::now();
 
             unsigned short _port = critMssg.second.port;

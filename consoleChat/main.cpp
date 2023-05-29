@@ -130,7 +130,7 @@ void Server()
 			serverWaitForACK.detach();
 		}
 
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num1))
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num9))
 		{
 			if (udpServer.packetLostProbablity >= 100)
 				udpServer.packetLostProbablity = 100;
@@ -139,7 +139,7 @@ void Server()
 
 			std::cout << "Packet loss probability: " << (int)udpServer.packetLostProbablity << std::endl;
 		}
-		else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num2))
+		else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num0))
 		{
 			if (udpServer.packetLostProbablity > 0)
 				udpServer.packetLostProbablity -= 0.01f;
@@ -187,7 +187,7 @@ void Client()
 			clientWaitForACK.detach();
 		}
 
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num1))
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num9))
 		{
 			if (udpClient.packetLostProbablity >= 100)
 				udpClient.packetLostProbablity = 100;
@@ -196,7 +196,7 @@ void Client()
 
 			std::cout << "Packet loss probability: " << (int)udpClient.packetLostProbablity << std::endl;
 		}
-		else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num2))
+		else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num0))
 		{
 			if (udpClient.packetLostProbablity > 0)
 				udpClient.packetLostProbablity -= 0.01f;

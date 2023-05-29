@@ -20,6 +20,7 @@ private:
 		std::string name;
 		int clientID;
 		int ts;
+		int lastMessageMode;
 	};
 
 	struct NewConnection
@@ -30,6 +31,7 @@ private:
 		int challengeTimeout;
 		std::string challenge;
 		std::string solution;
+		int lastMessageMode;
 	};
 
 	sf::UdpSocket socket;

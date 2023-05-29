@@ -14,6 +14,7 @@ protected:
     struct CriticalMessage
     {
         std::chrono::system_clock::time_point timestamp;
+        std::chrono::system_clock::time_point initialTimestamp;
         sf::Packet mssgPacket;
         sf::UdpSocket* socket;
         sf::IpAddress IP;

@@ -33,6 +33,7 @@ public:
 	void ReceiveChallengeResult(sf::Packet& packet, sf::IpAddress& remoteIP, int& remotePort);
 	void ReceiveAcknowledge(sf::Packet& packet, sf::IpAddress& remoteIP, int& remotePort);
 	void ReceiveEnterGame(sf::Packet& packet, sf::IpAddress& remoteIP, int& remotePort);
+	void ClientSendAcknoledge(MessageModes messageMode, sf::IpAddress& remoteIP, int& remotePort);
 
 	bool GetForceQuit();
 	void SetForceQuit(bool _forceQuit);
