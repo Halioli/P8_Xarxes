@@ -48,3 +48,13 @@ void ClientsGame::SetIsPlaying(bool isPlaying)
 {
 	game->SetPlaying(isPlaying);
 }
+
+void ClientsGame::SetOnlyOneConnectedPlayer(bool _onlyOneConnectedPlayer)
+{
+	game->SetOnlyOneConnectedPlayer(_onlyOneConnectedPlayer);
+}
+
+void ClientsGame::SetPlayerCharacter(bool isPlayerOne)
+{
+	game->SetPlayerCharacter(isPlayerOne);
+}

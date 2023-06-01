@@ -5,9 +5,6 @@
 #include <SFML/System/Vector2.hpp>
 #include "entities.h"
 #include "utils.h"
-#include "UDPHandler.h"
-#include "UDPClient.h"
-#include "UDPServer.h"
 class ClientsGame;
 
 #define SIZE 10.f
@@ -36,6 +33,8 @@ class Game
 	Character character2 = Character(sf::Vector2f(40, 40), 2);
 	std::vector<Bullet> bullets2; // Bullet container to manage them
 
+	bool onlyOneConnectedPlayer = true;
+
 public:
 	ClientsGame* clientGame;
 
@@ -48,4 +47,7 @@ public:
 
 	void SetPlaying(bool _playing);
 	bool GetPlaying();
+
+	void SetOnlyOneConnectedPlayer(bool _onlyOneConnectedPlayer);
+	void SetPlayerCharacter(bool isPlayerOne);
 };

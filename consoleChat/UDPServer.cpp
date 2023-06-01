@@ -69,7 +69,7 @@ void UDPServer::Receive(sf::Packet& inPacket, sf::IpAddress remoteIP, int& remot
 void UDPServer::ReceiveAcknowledge(int id, sf::Packet& inPacket, sf::IpAddress remoteIP, unsigned short& remotePort)
 {
     mtx.lock();
-    float mssgRTT = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - critMessages[idsToMessageIDs[id]].initialTimestamp).count();
+    float mssgRTT = (float)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - critMessages[idsToMessageIDs[id]].initialTimestamp).count();
     lastACKsTimeDifference.push_back(mssgRTT);
     mtx.unlock();
 
@@ -112,7 +112,7 @@ void UDPServer::ReceiveLogin(sf::Packet& inPacket, sf::IpAddress remoteIP, unsig
     inPacket >> _port >> username;
 
     // Get random challenge
-    int challengeIndex = 0;
+    int challengeIndex = 1;
 
     // Create and save new connection
     NewConnection newConn;
@@ -186,10 +186,29 @@ void UDPServer::ReceiveJoinGame(int id, sf::Packet& inPacket, sf::IpAddress remo
 {
     SendAcknowledge(&socket, MessageModes::JOIN_GAME, id, remoteIP, remotePort);
 
+    bool foundGame = true;
     sf::Packet outPacket;
     outPacket << id << MessageModes::ENTER_GAME;
 
     // Join/Create game (TODO)
+    if (clientsMatches.size() < 0)
+    {
+        // Create game
+        Game newGame;
+        activeGames.emplace_back(newGame);
+
+        //clientsMatches[id].creatorUsername = clients[id].name;
+        //clientsMatches[id].game = &activeGames.back();
+
+        outPacket << !foundGame;
+    }
+    else
+    {
+        // Find and join game
+
+
+        outPacket << foundGame;
+    }
 
     // Send crit mssg to client
     Send(&socket, outPacket, remoteIP, remotePort);
@@ -201,9 +220,14 @@ void UDPServer::ReceiveCreateGame(int id, sf::Packet& inPacket, sf::IpAddress re
     SendAcknowledge(&socket, MessageModes::CREATE_GAME, id, remoteIP, remotePort);
 
     sf::Packet outPacket;
-    outPacket << id << MessageModes::ENTER_GAME;
+    outPacket << id << MessageModes::ENTER_GAME << false;
 
     // Create gamem (TODO)
+    //Game newGame;
+    //activeGames.emplace_back(newGame);
+
+    //clientsMatches[id].creatorUsername = clients[id].name;
+    //clientsMatches[id].game = &activeGames.back();
 
     // Send crit mssg to client
     Send(&socket, outPacket, remoteIP, remotePort);

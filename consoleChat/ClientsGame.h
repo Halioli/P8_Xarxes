@@ -13,5 +13,7 @@ public:
 	void ShowGamesMenu();
 
 	void SetIsPlaying(bool isPlaying);
+	void SetOnlyOneConnectedPlayer(bool _onlyOneConnectedPlayer);
+	void SetPlayerCharacter(bool isPlayerOne);
 };
 

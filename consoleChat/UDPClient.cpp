@@ -213,6 +213,20 @@ void UDPClient::ReceiveAcknowledge(sf::Packet& packet, sf::IpAddress& remoteIP, 
 void UDPClient::ReceiveEnterGame(sf::Packet& packet, sf::IpAddress& remoteIP, int& remotePort)
 {
 	ClientSendAcknoledge(MessageModes::ENTER_GAME, remoteIP, remotePort);
+	bool joiningGame;
+	packet >> joiningGame;
+
+	if (!joiningGame)
+	{
+		// Wait for new player
+		myClientGame->SetOnlyOneConnectedPlayer(true);
+	}
+	else
+	{
+		// Play
+		myClientGame->SetOnlyOneConnectedPlayer(false);
+		myClientGame->SetPlayerCharacter(false);
+	}
 
 	myClientGame->SetIsPlaying(true);
 }

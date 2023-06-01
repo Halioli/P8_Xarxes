@@ -6,9 +6,10 @@
 #include <SFML/System/Vector2.hpp>
 #define SIZE 10.f
 
-class Bullet {
+class Bullet 
+{
 	sf::Vector2f pos;
-	float maxSpeed = .2;
+	float maxSpeed = .2f;
 	sf::Vector2f angle;  // Direction of the shoot
 	sf::CircleShape bullet;
 public:

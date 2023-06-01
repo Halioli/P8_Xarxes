@@ -8,6 +8,7 @@
 #include <thread>
 #include "MessageModes.h"
 #include "UDPHandler.h"
+#include "game.h"
 
 class UDPServer : public UDPHandler
 {
@@ -47,12 +48,38 @@ private:
 		//     /_/ \_____/
 		//         /\  / \
 	    //        /  \/   \ 
-
+		"Name this painting:\n\n\n\n          ____  \n        o8%8888,    \n      o88%8888888.  \n     8'-    -:8888b   \n    8'         8888  \n   d8.-=. ,==-.:888b  \n   >8 `~` :`~' d8888   \n   88         ,88888   \n   88b. `-~  ':88888  \n   888b ~==~ .:88888 \n   88888o--:':::8888      \n   `88888| :::' 8888b  \n   8888^^'       8888b  \n  d888           ,%888b.   \n d88%            %%%8--'-.  \n/88:.__ ,       _%-' ---  -  \n    '''::===..-'   =  --. \n",
+		//          ____  
+		//        o8%8888,    
+		//      o88%8888888.  
+		//     8'-    -:8888b   
+		//    8'         8888  
+		//   d8.-=. ,==-.:888b  
+		//   >8 `~` :`~' d8888   
+		//   88         ,88888   
+		//   88b. `-~  ':88888  
+		//   888b ~==~ .:88888 
+		//   88888o--:':::8888      
+		//   `88888| :::' 8888b  
+		//   8888^^'       8888b  
+		//  d888           ,%888b.   
+		// d88%            %%%8--'-.  
+		///88:.__ ,       _%-' ---  -  
+		//    '''::===..-'   =  --. 
 	};
 	std::vector<std::string> solutions =
 	{
-		"dog"
+		"dog",
+		"monalisa"
 	};
+
+	struct Match
+	{
+		std::string creatorUsername;
+		Game* game;
+	};
+	std::map<int, Match> clientsMatches;
+	std::list<Game> activeGames;
 
 public:
 	std::map<int, Client> clients;

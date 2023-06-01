@@ -131,14 +131,16 @@ void Game::Run()
 		{
 			// When playing
 			window.draw(character.GetSprite());
-			window.draw(character2.GetSprite());
+			
+			if (!onlyOneConnectedPlayer)
+				window.draw(character2.GetSprite());
 
 			// Bullets update
 			auto it2 = bullets.begin();
 			while (it2 != bullets.end()) 
 			{
 
-				if (character2.CheckShoot(*it2)) 
+				if (character2.CheckShoot(*it2) && !onlyOneConnectedPlayer) 
 				{
 					it2 = bullets.erase(it2);
 					continue;
@@ -184,4 +186,18 @@ void Game::SetPlaying(bool _playing)
 bool Game::GetPlaying()
 {
 	return playing;
+}
+
+void Game::SetOnlyOneConnectedPlayer(bool _onlyOneConnectedPlayer)
+{
+	onlyOneConnectedPlayer = _onlyOneConnectedPlayer;
+}
+
+void Game::SetPlayerCharacter(bool isPlayerOne)
+{
+	if (!isPlayerOne)
+	{
+		character = Character(sf::Vector2f(40, 40), 2);
+		character2 = Character(sf::Vector2f(10, 10), 1);
+	}
 }
