@@ -8,7 +8,6 @@
 #include "TCPSocketManager.h"
 #include "UDPServer.h"
 #include "UDPClient.h"
-#include "game.h"
 #include "ClientsGame.h"
 
 const unsigned short PORT = 5000;
@@ -81,9 +80,21 @@ void WaitForACK(UDPHandler* handler)
 	handler->isACKThreadOpen = false;
 }
 
-void CallCalculateRTT(UDPServer *server)
+void CallCalculateRTT(UDPServer* server)
 {
 	server->CalculateAverageRTT();
+}
+
+void ClientSendCommands(UDPClient* client)
+{
+	client->isSendCommandsThreatOpen = true;
+	client->SendCommands();
+	client->isSendCommandsThreatOpen = false;
+}
+
+void ServerProcessCommands(UDPServer* server)
+{
+	server->ProcessReceivedCommands();
 }
 
 void OpenGame(UDPClient* udpClient)
@@ -120,6 +131,9 @@ void Server()
 
 	std::thread calculateRtt(CallCalculateRTT, &udpServer);
 	calculateRtt.detach();
+
+	std::thread processCommands(ServerProcessCommands, &udpServer);
+	processCommands.detach();
 
 	while (udpServer.GetIsRunning())
 	{
@@ -209,6 +223,12 @@ void Client()
 		if (udpClient.GetForceQuit())
 		{
 			applicationRunning = false;
+		}
+
+		if (udpClient.myClientGame->GetIsPlaying() && !udpClient.isSendCommandsThreatOpen)
+		{
+			std::thread clientSendCommands(ClientSendCommands, &udpClient);
+			clientSendCommands.detach();
 		}
 	}
 }

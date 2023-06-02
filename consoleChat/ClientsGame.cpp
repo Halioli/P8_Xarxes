@@ -44,9 +44,19 @@ void ClientsGame::ShowGamesMenu()
 	UpdateShownMessage(newShownMessage);
 }
 
+void ClientsGame::PlayerMovedCharacter(CommandType cmndType, sf::Vector2f direction)
+{
+	client->SaveNewCommand(cmndType, direction);
+}
+
 void ClientsGame::SetIsPlaying(bool isPlaying)
 {
 	game->SetPlaying(isPlaying);
+}
+
+bool ClientsGame::GetIsPlaying()
+{
+	return game->GetPlaying();
 }
 
 void ClientsGame::SetOnlyOneConnectedPlayer(bool _onlyOneConnectedPlayer)

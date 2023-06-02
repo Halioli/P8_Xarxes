@@ -1,6 +1,14 @@
 #include "game.h"
 #include "ClientsGame.h"
 
+Game::Game()
+{
+}
+
+Game::~Game()
+{
+}
+
 void Game::SetUp()
 {
 	// Windows initialization
@@ -59,16 +67,29 @@ void Game::Run()
 					cDir.y = 0;
 					
 					if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
+					{
 						cDir.y--;
+						lastCommandType = CommandType::MOVE_UP;
+					}
 					else if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
+					{
 						cDir.y++;
+						lastCommandType = CommandType::MOVE_DOWN;
+					}
 					
 					if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
+					{
 						cDir.x--;
+						lastCommandType = CommandType::MOVE_LEFT;
+					}
 					else if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
+					{
 						cDir.x++;
+						lastCommandType = CommandType::MOVE_RIGHT;
+					}
 					
 					character.Move(cDir);
+					clientGame->PlayerMovedCharacter(lastCommandType, character.GetPos());
 					
 					// Managing Shooting
 					if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) 
@@ -113,6 +134,7 @@ void Game::Run()
 						input += key2str(event.key.code); 
 					}
 				}
+				break;
 			}
 		}
 		window.clear();
@@ -162,6 +184,26 @@ void Game::Run()
 	}
 }
 
+void Game::UpdateGame()
+{
+	// update players & bullets positions
+}
+
+std::string Game::GetNameText()
+{
+	return nameText.getString();
+}
+
+bool Game::GetPlaying()
+{
+	return playing;
+}
+
+sf::Vector2f Game::GetPlayerPosition()
+{
+	return character.GetPos();
+}
+
 void Game::SetMessage(std::string mssg)
 {
 	message.clear();
@@ -173,19 +215,9 @@ void Game::SetMessage(std::string mssg)
 	text.setPosition(200, 100);
 }
 
-std::string Game::GetNameText()
-{
-	return nameText.getString();
-}
-
 void Game::SetPlaying(bool _playing)
 {
 	playing = _playing;
-}
-
-bool Game::GetPlaying()
-{
-	return playing;
 }
 
 void Game::SetOnlyOneConnectedPlayer(bool _onlyOneConnectedPlayer)
@@ -193,11 +225,18 @@ void Game::SetOnlyOneConnectedPlayer(bool _onlyOneConnectedPlayer)
 	onlyOneConnectedPlayer = _onlyOneConnectedPlayer;
 }
 
-void Game::SetPlayerCharacter(bool isPlayerOne)
+void Game::SetPlayerCharacter(bool _isPlayerOne)
 {
-	if (!isPlayerOne)
+	isPlayerOne = _isPlayerOne;
+
+	if (!_isPlayerOne)
 	{
 		character = Character(sf::Vector2f(40, 40), 2);
 		character2 = Character(sf::Vector2f(10, 10), 1);
 	}
+}
+
+void Game::SetPlayerPosition(sf::Vector2f newPos)
+{
+	character.SetPos(newPos);
 }

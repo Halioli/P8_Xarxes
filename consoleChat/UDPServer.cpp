@@ -58,6 +58,10 @@ void UDPServer::Receive(sf::Packet& inPacket, sf::IpAddress remoteIP, int& remot
             ReceiveCreateGame(_id, inPacket, remoteIP, shortPort);
             break;
 
+        case UPDATE_CHARACTER:
+            ReceiveUpdateCharacter(_id, inPacket, remoteIP, shortPort);
+            break;
+
         case DISCONNECT:
             break;
         default:
@@ -112,7 +116,7 @@ void UDPServer::ReceiveLogin(sf::Packet& inPacket, sf::IpAddress remoteIP, unsig
     inPacket >> _port >> username;
 
     // Get random challenge
-    int challengeIndex = 1;
+    int challengeIndex = (rand() % challenges.size());
 
     // Create and save new connection
     NewConnection newConn;
@@ -159,6 +163,7 @@ void UDPServer::ReceiveChallengeResponse(int id, sf::Packet& inPacket, sf::IpAdd
         newClient.port = remotePort;
         newClient.name = newConnections[id].name;
         newClient.lastMessageMode = MessageModes::CHALLENGE_RESULT;
+        newClient.clientCommandMessages.clear();
 
         clients[id] = newClient;
         newConnections.erase(id);
@@ -193,21 +198,50 @@ void UDPServer::ReceiveJoinGame(int id, sf::Packet& inPacket, sf::IpAddress remo
     // Join/Create game (TODO)
     if (clientsMatches.size() < 0)
     {
-        // Create game
-        Game newGame;
-        activeGames.emplace_back(newGame);
-
-        //clientsMatches[id].creatorUsername = clients[id].name;
-        //clientsMatches[id].game = &activeGames.back();
+        CreateGame(id);
 
         outPacket << !foundGame;
     }
     else
     {
+        std::list<char> firstLetters;
+        int diff = 100;
+        int idToJoin = -1;
+
         // Find and join game
+        for each (std::pair<int, Match> clientMatch in clientsMatches)
+        {
+            if (!clientMatch.second.isFull)
+            {
+                if (std::abs(clientMatch.second.creatorUsername[0] - clients[id].name[0]) < diff)
+                {
+                    idToJoin = clientMatch.first;
+                }
 
+                break;
+            }
+        }
 
-        outPacket << foundGame;
+        if (idToJoin != -1)
+        {
+            // Make client join a game
+            clientsMatches[idToJoin].otherPlayerID = id;
+            clientsMatches[idToJoin].isFull = true;
+
+            clientsMatches[id].creatorUsername = clients[id].name;
+            clientsMatches[id].game = clientsMatches[idToJoin].game;
+            clientsMatches[id].otherPlayerID = idToJoin;
+            clientsMatches[id].isFull = true;
+
+            outPacket << foundGame;
+        }
+        else
+        {
+            std::cout << "No suitable game found" << std::endl;
+            CreateGame(id);
+
+            outPacket << !foundGame;
+        }
     }
 
     // Send crit mssg to client
@@ -222,16 +256,22 @@ void UDPServer::ReceiveCreateGame(int id, sf::Packet& inPacket, sf::IpAddress re
     sf::Packet outPacket;
     outPacket << id << MessageModes::ENTER_GAME << false;
 
-    // Create gamem (TODO)
-    //Game newGame;
-    //activeGames.emplace_back(newGame);
-
-    //clientsMatches[id].creatorUsername = clients[id].name;
-    //clientsMatches[id].game = &activeGames.back();
+    CreateGame(id);
 
     // Send crit mssg to client
     Send(&socket, outPacket, remoteIP, remotePort);
     CriticalMessageSent(++lastMessageSentID, outPacket, &socket, remoteIP, remotePort);
+}
+
+void UDPServer::ReceiveUpdateCharacter(int id, sf::Packet& inPacket, sf::IpAddress remoteIP, unsigned short& remotePort)
+{
+    int commandId;
+    inPacket >> commandId;
+
+    // Save client command to map
+    mtx.lock();
+    clients[id].clientCommandMessages[commandId] = inPacket;
+    mtx.unlock();
 }
 
 void UDPServer::CalculateAverageRTT()
@@ -260,6 +300,46 @@ void UDPServer::CalculateAverageRTT()
             result = currentValue / lastACKsTimeDifference.size();
 
             std::cout << "Current RTT: " << result << std::endl;
+        }
+        mtx.unlock();
+    }
+}
+
+void UDPServer::CreateGame(int id)
+{
+    // Create game
+    activeGames.push_back(new Game); // REMEMBER TO CLEAR :^)
+
+    clientsMatches[id].creatorUsername = clients[id].name;
+    clientsMatches[id].game = activeGames.back();
+}
+
+void UDPServer::ProcessReceivedCommands()
+{
+    float dirX, dirY;
+
+    sf::Vector2f newPlayerPos;
+
+    while (isRunning)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+        // Check every received command in every client
+        mtx.lock();
+        for each (std::pair<int, Client> client in clients)
+        {
+            // Check if client is in match
+            if (clientsMatches.find(client.first) != clientsMatches.end())
+            {
+                for each (std::pair<int, sf::Packet> cmndMssg in client.second.clientCommandMessages)
+                {
+                    cmndMssg.second >> dirX >> dirY;
+                    
+                    // Validate move
+                    newPlayerPos = clientsMatches[client.first].game->GetPlayerPosition();
+                }
+                client.second.clientCommandMessages.clear();
+            }
         }
         mtx.unlock();
     }

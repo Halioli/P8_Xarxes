@@ -76,7 +76,7 @@ void UDPClient::SendSelectedGameOption(std::string* gameOption)
 	else
 	{
 		// Clear and ask again
-		myClientGame->UpdateShownMessage("1 - Join Game || 2 - Create Game\n\n\nIncorrect input, please try again u insignificant fuck.\ny'all put bones in ya pizza then?");
+		myClientGame->UpdateShownMessage("1 - Join Game || 2 - Create Game\n\n\nIncorrect input");
 	}
 }
 
@@ -235,6 +235,40 @@ void UDPClient::ClientSendAcknoledge(MessageModes messageMode, sf::IpAddress& re
 {
 	unsigned short shorPort = remotePort;
 	SendAcknowledge(&socket, (int)messageMode, ID, remoteIP, shorPort);
+}
+
+void UDPClient::SaveNewCommand(CommandType commandType, sf::Vector2f position)
+{
+	Command newCommand;
+	newCommand.cmndId = ++lastMessageCommandId;
+	newCommand.cmndType = commandType;
+	newCommand.newPos = position;
+
+	mtx.lock();
+	executedCommands.push_back(newCommand);
+	mtx.unlock();
+}
+
+void UDPClient::SendCommands()
+{
+	sf::Packet outPacket;
+
+	while (!forceQuit)
+	{
+		std::this_thread::sleep_for(std::chrono::milliseconds(80));
+
+		mtx.lock();
+		outPacket << ID << MessageModes::UPDATE_CHARACTER << executedCommands.size();
+		for (int i = 0; i < executedCommands.size(); i++)
+		{
+			outPacket << executedCommands[i].cmndId << executedCommands[i].cmndType << executedCommands[i].newPos.x << executedCommands[i].newPos.y;
+		}
+		mtx.unlock();
+		
+		Send(&socket, outPacket, serverIP, shortServerPort);
+
+		outPacket.clear();
+	}
 }
 
 bool UDPClient::GetForceQuit()

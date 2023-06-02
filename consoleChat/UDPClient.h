@@ -16,7 +16,17 @@ private:
 
 	bool forceQuit = false;
 
+	struct Command
+	{
+		int cmndId = 0;
+		sf::Vector2f newPos;
+		CommandType cmndType;
+	};
+	int lastMessageCommandId = 0;
+	std::vector<Command> executedCommands;
+
 public:
+	bool isSendCommandsThreatOpen = false;
 	int serverPort;
 	unsigned short shortServerPort = 5000;
 	sf::IpAddress serverIP;
@@ -33,8 +43,14 @@ public:
 	void ReceiveChallengeResult(sf::Packet& packet, sf::IpAddress& remoteIP, int& remotePort);
 	void ReceiveAcknowledge(sf::Packet& packet, sf::IpAddress& remoteIP, int& remotePort);
 	void ReceiveEnterGame(sf::Packet& packet, sf::IpAddress& remoteIP, int& remotePort);
-	void ClientSendAcknoledge(MessageModes messageMode, sf::IpAddress& remoteIP, int& remotePort);
 
+	void ClientSendAcknoledge(MessageModes messageMode, sf::IpAddress& remoteIP, int& remotePort);
+	void SaveNewCommand(CommandType commandType, sf::Vector2f position);
+
+	// threats
+	void SendCommands();
+
+	// get/set
 	bool GetForceQuit();
 	void SetForceQuit(bool _forceQuit);
 };

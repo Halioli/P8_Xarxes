@@ -22,6 +22,7 @@ private:
 		int clientID;
 		int ts;
 		int lastMessageMode;
+		std::map<int, sf::Packet> clientCommandMessages;
 	};
 
 	struct NewConnection
@@ -75,13 +76,16 @@ private:
 
 	struct Match
 	{
+		bool isFull = false;
 		std::string creatorUsername;
+		int otherPlayerID;
 		Game* game;
 	};
 	std::map<int, Match> clientsMatches;
-	std::list<Game> activeGames;
+	std::list<Game*> activeGames;
 
 public:
+
 	std::map<int, Client> clients;
 	std::map<int, NewConnection> newConnections;
 
@@ -93,7 +97,11 @@ public:
 	void ReceiveMessage(int id, sf::Packet& inPacket, sf::IpAddress remoteIP, unsigned short& remotePort);
 	void ReceiveJoinGame(int id, sf::Packet& inPacket, sf::IpAddress remoteIP, unsigned short& remotePort);
 	void ReceiveCreateGame(int id, sf::Packet& inPacket, sf::IpAddress remoteIP, unsigned short& remotePort);
+	void ReceiveUpdateCharacter(int id, sf::Packet& inPacket, sf::IpAddress remoteIP, unsigned short& remotePort);
+	
 	void CalculateAverageRTT();
+	void CreateGame(int id);
+	void ProcessReceivedCommands();
 
 	bool GetIsRunning();
 };

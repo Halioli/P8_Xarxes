@@ -5,6 +5,7 @@
 #include <SFML/System/Vector2.hpp>
 #include "entities.h"
 #include "utils.h"
+#include "MessageModes.h"
 class ClientsGame;
 
 #define SIZE 10.f
@@ -34,20 +35,26 @@ class Game
 	std::vector<Bullet> bullets2; // Bullet container to manage them
 
 	bool onlyOneConnectedPlayer = true;
+	bool isPlayerOne = true;
+	CommandType lastCommandType;
 
 public:
 	ClientsGame* clientGame;
+
+	Game();
+	~Game();
 
 	void SetUp();      // Initializing GUI
 	void Run(); // Application loop
 	void UpdateGame(); // No implemented => Implement it in the Server side
 
 	void SetMessage(std::string mssg);
-	std::string GetNameText();
-
 	void SetPlaying(bool _playing);
-	bool GetPlaying();
-
 	void SetOnlyOneConnectedPlayer(bool _onlyOneConnectedPlayer);
-	void SetPlayerCharacter(bool isPlayerOne);
+	void SetPlayerCharacter(bool _isPlayerOne);
+	void SetPlayerPosition(sf::Vector2f newPos);
+
+	std::string GetNameText();
+	bool GetPlaying();
+	sf::Vector2f GetPlayerPosition();
 };

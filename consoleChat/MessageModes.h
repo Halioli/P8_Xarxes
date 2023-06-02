@@ -11,5 +11,15 @@ enum MessageModes
     JOIN_GAME, 
     CREATE_GAME,
     ENTER_GAME,
+    UPDATE_CHARACTER,
     DISCONNECT
+};
+
+enum CommandType
+{
+    MOVE_UP,
+    MOVE_RIGHT,
+    MOVE_DOWN,
+    MOVE_LEFT,
+    SHOOT
 };
