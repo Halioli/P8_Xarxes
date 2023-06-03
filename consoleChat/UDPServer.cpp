@@ -337,20 +337,20 @@ void UDPServer::ProcessReceivedCommands()
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
         // Check every received command in every client
-        for each (std::pair<int, Client> client in clients)
+        for (auto it = clients.begin(); it != clients.end(); ++it)
         {
             mtx.lock();
             // Check if client is in match
-            if (clientsMatches.find(client.first) != clientsMatches.end())
+            if (clientsMatches.find(it->first) != clientsMatches.end())
             {
-                IterateAndValidateCommandMessages(&client);
+                IterateAndValidateCommandMessages(it);
             }
             mtx.unlock();
         }
     }
 }
 
-void UDPServer::IterateAndValidateCommandMessages(std::pair<int, Client>* client)
+void UDPServer::IterateAndValidateCommandMessages(std::map<int, Client>::iterator it)
 {
     int commandType;
     sf::Vector2f newPlayerPos;
@@ -360,17 +360,17 @@ void UDPServer::IterateAndValidateCommandMessages(std::pair<int, Client>* client
     sf::Packet outPacket;
     int lastValidCommandId = -1;
 
-    if (client->second.clientCommands.size() <= 0)
+    if (it->second.clientCommands.size() <= 0)
     {
         return;
     }
 
-    for each (std::pair<int, Command> cmndMssg in client->second.clientCommands)
+    for each (std::pair<int, Command> cmndMssg in it->second.clientCommands)
     {
         commandType = cmndMssg.second.cmndType;
         newPlayerPos = cmndMssg.second.newPos;
 
-        currentServerPos = clientsMatches[client->first].game->GetPlayerPosition();
+        currentServerPos = clientsMatches[it->first].game->GetPlayerPosition();
 
         switch (commandType)
         {
@@ -396,40 +396,40 @@ void UDPServer::IterateAndValidateCommandMessages(std::pair<int, Client>* client
         if (currentServerPos == newPlayerPos)
         {
             // Valid movement
-            clientsMatches[client->first].game->SetPlayerPosition(newPlayerPos);
+            clientsMatches[it->first].game->SetPlayerPosition(newPlayerPos);
             lastValidCommandId = cmndMssg.first;
         }
     }
 
     // Update local client
-    outPacket << client->second.clientID << MessageModes::UPDATE_LOCAL_GAME 
-        << lastValidCommandId << client->second.clientCommands[client->second.clientCommands.size()].cmndId << client->second.clientCommands[0].cmndId;
-    unsigned short shortPort = client->second.port;
-    Send(&socket, outPacket, client->second.ip, shortPort);
+    outPacket << it->second.clientID << MessageModes::UPDATE_LOCAL_GAME
+        << lastValidCommandId << it->second.clientCommands[it->second.clientCommands.size()].cmndId << it->second.clientCommands[0].cmndId;
+    unsigned short shortPort = it->second.port;
+    Send(&socket, outPacket, it->second.ip, shortPort);
     
     // Clear
     outPacket.clear();
 
     // Update remote client if they exist
-    if (clientsMatches[client->first].otherPlayerID != -1)
+    if (clientsMatches[it->first].otherPlayerID != -1)
     {
         if (lastValidCommandId != -1)
         {
             // Update the entity interpolation logic with the last player's position
-            outPacket << clientsMatches[client->first].otherPlayerID << MessageModes::UPDATE_REMOTE_GAME
-                << client->second.clientCommands[lastValidCommandId].newPos.x << client->second.clientCommands[lastValidCommandId].newPos.y;
+            outPacket << clientsMatches[it->first].otherPlayerID << MessageModes::UPDATE_REMOTE_GAME
+                << it->second.clientCommands[lastValidCommandId].newPos.x << it->second.clientCommands[lastValidCommandId].newPos.y;
         }
         else
         {
             // If they receive -1 / -1 entity interpolation should stay still
-            outPacket << clientsMatches[client->first].otherPlayerID << MessageModes::UPDATE_REMOTE_GAME << -1 << -1;
+            outPacket << clientsMatches[it->first].otherPlayerID << MessageModes::UPDATE_REMOTE_GAME << -1 << -1;
         }
-        shortPort = clients[clientsMatches[client->first].otherPlayerID].port;
-        Send(&socket, outPacket, clients[clientsMatches[client->first].otherPlayerID].ip, shortPort);
+        shortPort = clients[clientsMatches[it->first].otherPlayerID].port;
+        Send(&socket, outPacket, clients[clientsMatches[it->first].otherPlayerID].ip, shortPort);
     }
 
     // Clear
-    client->second.clientCommands.clear();
+    it->second.clientCommands.clear();
 }
 
 bool UDPServer::GetIsRunning()

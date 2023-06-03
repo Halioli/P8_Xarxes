@@ -102,7 +102,7 @@ public:
 	void CalculateAverageRTT();
 	void CreateGame(int id);
 	void ProcessReceivedCommands();
-	void IterateAndValidateCommandMessages(std::pair<int, Client>* client);
+	void IterateAndValidateCommandMessages(std::map<int, Client>::iterator it);
 
 	bool GetIsRunning();
 };

@@ -75,9 +75,8 @@ void Game::Run()
 					{
 						cDir.y++;
 						lastCommandType = CommandType::MOVE_DOWN;
-					}
-					
-					if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
+					}					
+					else if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
 					{
 						cDir.x--;
 						lastCommandType = CommandType::MOVE_LEFT;
@@ -107,8 +106,7 @@ void Game::Run()
 							cDir.y = 1;
 							cDir.x = 0;
 						}
-						
-						if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
+						else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
 							cDir.x = -1;
 						else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
 							cDir.x = 1;
