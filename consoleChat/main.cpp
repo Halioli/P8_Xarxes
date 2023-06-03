@@ -100,7 +100,7 @@ void ServerProcessCommands(UDPServer* server)
 void OpenGame(UDPClient* udpClient)
 {
 	Game game;
-	game.clientGame = new ClientsGame;
+	game.clientGame = new ClientsGame();
 
 	game.clientGame->client = udpClient;
 	game.clientGame->game = &game;
@@ -179,7 +179,7 @@ void Client()
 	// Set server values
 	udpClient.serverIP = IP;
 	udpClient.shortServerPort = PORT;
-	udpClient.myClientGame = new ClientsGame;
+	udpClient.myClientGame = new ClientsGame();
 
 	// Logic for receiving
 	std::thread udpSocketReceive(OpenReceiveThread, &udpClient);
@@ -225,7 +225,7 @@ void Client()
 			applicationRunning = false;
 		}
 
-		if (udpClient.myClientGame->GetIsPlaying() && !udpClient.isSendCommandsThreatOpen)
+		if (udpClient.myClientGame->game != nullptr && udpClient.myClientGame->GetIsPlaying() && !udpClient.isSendCommandsThreatOpen)
 		{
 			std::thread clientSendCommands(ClientSendCommands, &udpClient);
 			clientSendCommands.detach();

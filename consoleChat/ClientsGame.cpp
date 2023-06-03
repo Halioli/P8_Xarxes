@@ -1,5 +1,7 @@
 #include "ClientsGame.h"
 
+ClientsGame::ClientsGame() { }
+
 void ClientsGame::UpdateShownMessage(std::string message)
 {
 	game->SetMessage(message);

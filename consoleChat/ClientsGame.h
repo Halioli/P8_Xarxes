@@ -6,6 +6,8 @@
 class ClientsGame
 {
 public:
+	ClientsGame();
+
 	UDPClient* client;
 	Game* game;
 

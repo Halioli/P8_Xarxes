@@ -189,6 +189,11 @@ void Game::UpdateGame()
 	// update players & bullets positions
 }
 
+void Game::MoveCharacter(sf::Vector2f direction)
+{
+	character.Move(direction);
+}
+
 std::string Game::GetNameText()
 {
 	return nameText.getString();

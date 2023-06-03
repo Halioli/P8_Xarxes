@@ -163,7 +163,7 @@ void UDPServer::ReceiveChallengeResponse(int id, sf::Packet& inPacket, sf::IpAdd
         newClient.port = remotePort;
         newClient.name = newConnections[id].name;
         newClient.lastMessageMode = MessageModes::CHALLENGE_RESULT;
-        newClient.clientCommandMessages.clear();
+        newClient.clientCommands.clear();
 
         clients[id] = newClient;
         newConnections.erase(id);
@@ -265,13 +265,27 @@ void UDPServer::ReceiveCreateGame(int id, sf::Packet& inPacket, sf::IpAddress re
 
 void UDPServer::ReceiveUpdateCharacter(int id, sf::Packet& inPacket, sf::IpAddress remoteIP, unsigned short& remotePort)
 {
+    Command tempCommand;
+    int commandSize;
+    inPacket >> commandSize;
+
     int commandId;
-    inPacket >> commandId;
+    int commandType;
+    sf::Vector2f newPos;
 
     // Save client command to map
-    mtx.lock();
-    clients[id].clientCommandMessages[commandId] = inPacket;
-    mtx.unlock();
+    for (int i = 0; i < commandSize; i++)
+    {
+        inPacket >> commandId >> commandType >> newPos.x >> newPos.y;
+        
+        tempCommand.cmndId = commandId;
+        tempCommand.cmndType = commandType;
+        tempCommand.newPos = newPos;
+
+        mtx.lock();
+        clients[id].clientCommands[commandId] = tempCommand;
+        mtx.unlock();
+    }
 }
 
 void UDPServer::CalculateAverageRTT()
@@ -310,39 +324,112 @@ void UDPServer::CreateGame(int id)
     // Create game
     activeGames.push_back(new Game); // REMEMBER TO CLEAR :^)
 
+    mtx.lock();
     clientsMatches[id].creatorUsername = clients[id].name;
     clientsMatches[id].game = activeGames.back();
+    mtx.unlock();
 }
 
 void UDPServer::ProcessReceivedCommands()
 {
-    float dirX, dirY;
-
-    sf::Vector2f newPlayerPos;
-
     while (isRunning)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
         // Check every received command in every client
-        mtx.lock();
         for each (std::pair<int, Client> client in clients)
         {
+            mtx.lock();
             // Check if client is in match
             if (clientsMatches.find(client.first) != clientsMatches.end())
             {
-                for each (std::pair<int, sf::Packet> cmndMssg in client.second.clientCommandMessages)
-                {
-                    cmndMssg.second >> dirX >> dirY;
-                    
-                    // Validate move
-                    newPlayerPos = clientsMatches[client.first].game->GetPlayerPosition();
-                }
-                client.second.clientCommandMessages.clear();
+                IterateAndValidateCommandMessages(&client);
             }
+            mtx.unlock();
         }
-        mtx.unlock();
     }
+}
+
+void UDPServer::IterateAndValidateCommandMessages(std::pair<int, Client>* client)
+{
+    int commandType;
+    sf::Vector2f newPlayerPos;
+    sf::Vector2f currentServerPos;
+    sf::Vector2f moveDirection;
+
+    sf::Packet outPacket;
+    int lastValidCommandId = -1;
+
+    if (client->second.clientCommands.size() <= 0)
+    {
+        return;
+    }
+
+    for each (std::pair<int, Command> cmndMssg in client->second.clientCommands)
+    {
+        commandType = cmndMssg.second.cmndType;
+        newPlayerPos = cmndMssg.second.newPos;
+
+        currentServerPos = clientsMatches[client->first].game->GetPlayerPosition();
+
+        switch (commandType)
+        {
+        case MOVE_UP:
+            moveDirection = sf::Vector2f(0, -1);
+            break;
+        case MOVE_RIGHT:
+            moveDirection = sf::Vector2f(1, 0);
+            break;
+        case MOVE_DOWN:
+            moveDirection = sf::Vector2f(0, 1);
+            break;
+        case MOVE_LEFT:
+            moveDirection = sf::Vector2f(-1, 0);
+            break;
+        case SHOOT:
+            break;
+        default:
+            break;
+        }
+        currentServerPos += moveDirection;
+
+        if (currentServerPos == newPlayerPos)
+        {
+            // Valid movement
+            clientsMatches[client->first].game->SetPlayerPosition(newPlayerPos);
+            lastValidCommandId = cmndMssg.first;
+        }
+    }
+
+    // Update local client
+    outPacket << client->second.clientID << MessageModes::UPDATE_LOCAL_GAME 
+        << lastValidCommandId << client->second.clientCommands[client->second.clientCommands.size()].cmndId << client->second.clientCommands[0].cmndId;
+    unsigned short shortPort = client->second.port;
+    Send(&socket, outPacket, client->second.ip, shortPort);
+    
+    // Clear
+    outPacket.clear();
+
+    // Update remote client if they exist
+    if (clientsMatches[client->first].otherPlayerID != -1)
+    {
+        if (lastValidCommandId != -1)
+        {
+            // Update the entity interpolation logic with the last player's position
+            outPacket << clientsMatches[client->first].otherPlayerID << MessageModes::UPDATE_REMOTE_GAME
+                << client->second.clientCommands[lastValidCommandId].newPos.x << client->second.clientCommands[lastValidCommandId].newPos.y;
+        }
+        else
+        {
+            // If they receive -1 / -1 entity interpolation should stay still
+            outPacket << clientsMatches[client->first].otherPlayerID << MessageModes::UPDATE_REMOTE_GAME << -1 << -1;
+        }
+        shortPort = clients[clientsMatches[client->first].otherPlayerID].port;
+        Send(&socket, outPacket, clients[clientsMatches[client->first].otherPlayerID].ip, shortPort);
+    }
+
+    // Clear
+    client->second.clientCommands.clear();
 }
 
 bool UDPServer::GetIsRunning()

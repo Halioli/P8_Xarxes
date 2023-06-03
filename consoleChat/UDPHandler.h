@@ -21,6 +21,13 @@ protected:
         int port;
     };
 
+	struct Command
+	{
+		int cmndId = 0;
+		sf::Vector2f newPos;
+		int cmndType;
+	};
+
 	int lastMessageSentID = 0;
     std::mutex mtx;
 

@@ -22,7 +22,7 @@ private:
 		int clientID;
 		int ts;
 		int lastMessageMode;
-		std::map<int, sf::Packet> clientCommandMessages;
+		std::map<int, Command> clientCommands;
 	};
 
 	struct NewConnection
@@ -78,7 +78,7 @@ private:
 	{
 		bool isFull = false;
 		std::string creatorUsername;
-		int otherPlayerID;
+		int otherPlayerID = -1;
 		Game* game;
 	};
 	std::map<int, Match> clientsMatches;
@@ -102,6 +102,7 @@ public:
 	void CalculateAverageRTT();
 	void CreateGame(int id);
 	void ProcessReceivedCommands();
+	void IterateAndValidateCommandMessages(std::pair<int, Client>* client);
 
 	bool GetIsRunning();
 };

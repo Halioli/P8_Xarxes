@@ -133,6 +133,13 @@ void UDPClient::Receive(sf::Packet& packet, sf::IpAddress& remoteIP, int& remote
 			}
 			break;
 
+		case UPDATE_LOCAL_GAME:
+			ReceiveUpdateLocalGame(packet, remoteIP, remotePort);
+			break;
+
+		case UPDATE_REMOTE_GAME:
+			break;
+
 		case DISCONNECT:
 			break;
 
@@ -231,6 +238,29 @@ void UDPClient::ReceiveEnterGame(sf::Packet& packet, sf::IpAddress& remoteIP, in
 	myClientGame->SetIsPlaying(true);
 }
 
+void UDPClient::ReceiveUpdateLocalGame(sf::Packet& packet, sf::IpAddress& remoteIP, int& remotePort)
+{
+	int lastValidCommandId, lastServerReceivedCommandId, firstServerReceivedCommandId;
+	packet >> lastValidCommandId >> lastServerReceivedCommandId >> firstServerReceivedCommandId;
+
+	if (lastValidCommandId == -1)
+	{
+		mtx.lock();
+		if (firstServerReceivedCommandId != 0)
+			myClientGame->game->SetPlayerPosition(executedCommands[firstServerReceivedCommandId - 1].newPos);
+		else
+			myClientGame->game->SetPlayerPosition(executedCommands[0].newPos);
+		mtx.unlock();
+	}
+	else if (lastValidCommandId < lastServerReceivedCommandId)
+	{
+		// Some command was invalid
+		mtx.lock();
+		myClientGame->game->SetPlayerPosition(executedCommands[lastValidCommandId].newPos);
+		mtx.unlock();
+	}
+}
+
 void UDPClient::ClientSendAcknoledge(MessageModes messageMode, sf::IpAddress& remoteIP, int& remotePort)
 {
 	unsigned short shorPort = remotePort;
@@ -245,29 +275,35 @@ void UDPClient::SaveNewCommand(CommandType commandType, sf::Vector2f position)
 	newCommand.newPos = position;
 
 	mtx.lock();
-	executedCommands.push_back(newCommand);
+	pendingCommands.push_back(newCommand);
 	mtx.unlock();
 }
 
 void UDPClient::SendCommands()
 {
 	sf::Packet outPacket;
+	int pendingCommandsSize;
 
 	while (!forceQuit)
 	{
 		std::this_thread::sleep_for(std::chrono::milliseconds(80));
 
 		mtx.lock();
-		outPacket << ID << MessageModes::UPDATE_CHARACTER << executedCommands.size();
-		for (int i = 0; i < executedCommands.size(); i++)
+		if (pendingCommands.size() > 0)
 		{
-			outPacket << executedCommands[i].cmndId << executedCommands[i].cmndType << executedCommands[i].newPos.x << executedCommands[i].newPos.y;
+			pendingCommandsSize = pendingCommands.size();
+			outPacket << ID << MessageModes::UPDATE_CHARACTER << pendingCommandsSize;
+			for (int i = 0; i < pendingCommands.size(); i++)
+			{
+				outPacket << pendingCommands[i].cmndId << pendingCommands[i].cmndType << pendingCommands[i].newPos.x << pendingCommands[i].newPos.y;
+				executedCommands.push_back(pendingCommands[i]);
+			}
+			pendingCommands.clear();
+
+			Send(&socket, outPacket, serverIP, shortServerPort);
+			outPacket.clear();
 		}
 		mtx.unlock();
-		
-		Send(&socket, outPacket, serverIP, shortServerPort);
-
-		outPacket.clear();
 	}
 }
 

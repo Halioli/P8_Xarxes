@@ -47,6 +47,7 @@ public:
 	void SetUp();      // Initializing GUI
 	void Run(); // Application loop
 	void UpdateGame(); // No implemented => Implement it in the Server side
+	void MoveCharacter(sf::Vector2f direction);
 
 	void SetMessage(std::string mssg);
 	void SetPlaying(bool _playing);

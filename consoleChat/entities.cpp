@@ -4,7 +4,8 @@
 
 Bullet::Bullet(sf::Vector2f _pos, sf::Vector2f _angle)
 {
-	_pos.y++; _pos.x++;
+	_pos.y++; 
+	_pos.x++;
 	pos = _pos;
 	angle = _angle;
 	bullet.setRadius(5.f);
@@ -14,8 +15,8 @@ Bullet::Bullet(sf::Vector2f _pos, sf::Vector2f _angle)
 
 void Bullet::Move()
 {
-	pos = pos + angle* maxSpeed;
-	bullet.setPosition(pos*SIZE);
+	pos = pos + angle * maxSpeed;
+	bullet.setPosition(pos * SIZE);
 }
 
 bool Bullet::OutOfBounds() {
@@ -49,7 +50,7 @@ Character::Character(sf::Vector2f initPos, int spriteNum)
 		std::cout << "Can't load avatar's texture" << std::endl;
 	}
 	sprite.setTexture(characterTex);
-	sprite.setPosition(pos.x*SIZE, pos.y*SIZE);
+	sprite.setPosition(pos.x * SIZE, pos.y * SIZE);
 }
 
 sf::Vector2f Character::GetPos()
@@ -64,7 +65,7 @@ sf::Sprite Character::GetSprite()
 
 void Character::Move(sf::Vector2f dir)
 {
-	sprite.setPosition((pos.x+dir.x)*SIZE, (pos.y + dir.y)*SIZE);
+	sprite.setPosition((pos.x + dir.x) * SIZE, (pos.y + dir.y) * SIZE);
 	SetPos(sf::Vector2f((pos.x + dir.x), (pos.y + dir.y)));
 }
 
@@ -74,7 +75,7 @@ void Character::SetPos(sf::Vector2f newPos)
 }
 
 bool Character::OutOfBounds() {
-	if (pos.x*SIZE < 10 || pos.y*SIZE < 10 || pos.x*SIZE > 820 || pos.y*SIZE > 560)
+	if (pos.x * SIZE < 10 || pos.y * SIZE < 10 || pos.x * SIZE > 820 || pos.y * SIZE > 560)
 	{
 		return true;
 	}

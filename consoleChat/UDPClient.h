@@ -16,14 +16,9 @@ private:
 
 	bool forceQuit = false;
 
-	struct Command
-	{
-		int cmndId = 0;
-		sf::Vector2f newPos;
-		CommandType cmndType;
-	};
 	int lastMessageCommandId = 0;
-	std::vector<Command> executedCommands;
+	std::vector<Command> executedCommands; // All of the client's commands
+	std::vector<Command> pendingCommands;  // New commands yet to send
 
 public:
 	bool isSendCommandsThreatOpen = false;
@@ -43,6 +38,7 @@ public:
 	void ReceiveChallengeResult(sf::Packet& packet, sf::IpAddress& remoteIP, int& remotePort);
 	void ReceiveAcknowledge(sf::Packet& packet, sf::IpAddress& remoteIP, int& remotePort);
 	void ReceiveEnterGame(sf::Packet& packet, sf::IpAddress& remoteIP, int& remotePort);
+	void ReceiveUpdateLocalGame(sf::Packet& packet, sf::IpAddress& remoteIP, int& remotePort);
 
 	void ClientSendAcknoledge(MessageModes messageMode, sf::IpAddress& remoteIP, int& remotePort);
 	void SaveNewCommand(CommandType commandType, sf::Vector2f position);
