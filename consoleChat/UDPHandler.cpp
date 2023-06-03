@@ -51,7 +51,7 @@ void UDPHandler::WaitForACK()
     for each (std::pair<int, CriticalMessage> critMssg in critMessages)
     {
         // if one second passed
-        if (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - critMssg.second.timestamp).count() >= 2.f)
+        if (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - critMssg.second.timestamp).count() >= 0.5f)
         {
             // resend mssg
             std::cout << "Resend Packet id: " << critMssg.first << std::endl;
